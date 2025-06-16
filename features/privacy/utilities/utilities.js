@@ -46,6 +46,9 @@ export function loadOneTrustScriptOnce(domainId) {
       const script = document.createElement('script');
       script.src = 'https://cdn.cookielaw.org/scripttemplates/otSDKStub.js';
       script.setAttribute('data-domain-script', domainId);
+      script.setAttribute('data-settings-id', domainId);
+      script.setAttribute('data-document-language', 'true');
+      script.setAttribute('data-disable-banner', 'true');
       script.async = true;
       script.onload = resolve;
       script.onerror = reject;

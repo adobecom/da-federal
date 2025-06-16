@@ -1,12 +1,12 @@
-import { initPrivacy } from './privacy-standalone.js';
+//import { initPrivacy } from './privacy-standalone.js';
+import { initPrivacy } from '../../dist/privacy-standalone.min.js';
 import { setLibs, getLibs } from '../../scripts/utils.js';
-import privacyState from './privacy-state.js';
 
 setLibs('/libs'); 
 const miloLibs = getLibs();
 
 const utilsModule = await import(`${miloLibs}/utils/utils.js`);
-const { getConfig, getMetadata, loadBlock } = utilsModule;
+const { getConfig, getMetadata } = utilsModule;
 
 const rawConfig = getConfig ? getConfig() : {};
 const config = {
@@ -16,6 +16,6 @@ const config = {
     miloLibs
   };
 // Start privacy flow automatically!
-initPrivacy(config, getMetadata, loadBlock);
+initPrivacy(config, getMetadata);
 document.getElementById('open-privacy').onclick = () =>
   document.dispatchEvent(new CustomEvent('adobePrivacy:OpenModal'));

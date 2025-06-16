@@ -9,7 +9,8 @@
     "test:watch": "npm test -- --watch",
     "lint": "npm run lint:js && npm run lint:css",
     "lint:js": "eslint .",
-    "lint:css": "stylelint 'blocks/**/*.css' 'styles/*.css'"
+    "lint:css": "stylelint 'blocks/**/*.css' 'styles/*.css'",
+    "build:privacy": "node build.mjs"
   },
   "repository": {
     "type": "git",
@@ -20,5 +21,8 @@
   "bugs": {
     "url": "https://github.com/adobecom/federal/issues"
   },
-  "homepage": "https://github.com/adobecom/federal#readme"
+  "homepage": "https://github.com/adobecom/federal#readme",
+  "devDependencies": {
+    "esbuild": "^0.19.10"
+  }
 }

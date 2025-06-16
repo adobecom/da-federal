@@ -70,8 +70,21 @@ export default async function loadPrivacyBanner(config, getMetadata) {
   }
 
   if (document.querySelector('.privacy-banner')) return;
-  const cssUrl = new URL('./privacy-banner.css', import.meta.url).href;
-  loadStyle(cssUrl);
+  
+    // const cssUrl = new URL('./privacy-banner.css', import.meta.url).href;
+   //const codeRoot = "https://acomprivacyot--federal--adobecom.aem.page";
+   //const cssUrl = `${codeRoot}/features/privacy/privacy-banner.css`
+    // loadStyle(cssUrl);
+    //this works in bundle but not in local
+  // import ('./privacy-banner.css');
+  //   loadStyle(new URL('./privacy-banner.css', import.meta.url).href);
+  try {
+    await import('./privacy-banner.css');
+  } catch {
+    loadStyle(new URL('./privacy-banner.css', import.meta.url).href);
+  }
+
+
   if (privacyState.hasExistingConsent()) return;
 
   // GEO/CONFIG/PROFILE/GPC LOGIC

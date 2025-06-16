@@ -1,11 +1,11 @@
 import privacyState from './privacy-state.js';
-import { setLibs, getLibs } from '../../scripts/utils.js';
+//import { setLibs, getLibs } from '../../scripts/utils.js';
 import { loadStyle } from './utilities/utilities.js';
 import { createTag } from './utilities/utilities.js';
 import { loadOneTrustScriptOnce } from './utilities/utilities.js';
 
-setLibs('/libs');
-const miloLibs = getLibs();
+//setLibs('/libs');
+//const miloLibs = getLibs();
 
 function fragment(children) {
   const frag = document.createDocumentFragment();
@@ -199,14 +199,27 @@ async function fetchPrivacyJson(config, getFederatedContentRoot) {
 }
 
 export default async function loadPrivacyModal(config, getMetadata) {
-  const utilsModule = await import('../../scripts/utils.js');
-  const getLibs = utilsModule.getLibs;
-  const miloLibs = getLibs('/libs');
-  const { getFederatedContentRoot } = await import(`${miloLibs}/utils/utils.js`);
+  // const utilsModule = await import('../../scripts/utils.js');
+  // const getLibs = utilsModule.getLibs;
+  // const miloLibs = getLibs('/libs');
+  // const { getFederatedContentRoot } = await import(`${miloLibs}/utils/utils.js`);
+  const miloLibs = '';
+  const getFederatedContentRoot = () => '';
 
   if (document.querySelector('.privacy-modal-backdrop')) return;
-  const cssUrl = new URL('./privacy-modal.css', import.meta.url).href;
-  loadStyle(cssUrl);
+
+    // const codeRoot = "https://acomprivacyot--federal--adobecom.aem.page";
+    // const cssUrl = `${codeRoot}/features/privacy/privacy-modal.css`
+    // loadStyle(cssUrl);
+    // import('./privacy-modal.css');
+    // loadStyle(new URL('./privacy-modal.css', import.meta.url).href);
+    
+  try {
+    await import('./privacy-modal.css');
+  } catch {
+    loadStyle(new URL('./privacy-modal.css', import.meta.url).href);
+  }
+
 
   let privacyJson;
   try {
