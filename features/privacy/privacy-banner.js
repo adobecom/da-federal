@@ -6,6 +6,7 @@ import isGPCEnabled from './utilities/helpers/isGPCEnabled.js';
 import { loadStyle } from './utilities/utilities.js';
 import { createTag } from './utilities/utilities.js';
 import { loadOneTrustScriptOnce } from './utilities/utilities.js';
+import config from './utilities//config.js';
 
 const trace = (...args) => {
   if (window.__PRIVACY_DEBUG__) console.log('[Privacy-Trace]', ...args);
@@ -64,13 +65,19 @@ async function fetchBannerData(config) {
   };
 }
 
-export default async function loadPrivacyBanner(config, getMetadata) {
+export default async function loadPrivacyBanner(clientConfig, getMetadata) {
   // Support custom location for local/dev testing
   const urlParams = new URLSearchParams(window.location.search);
   const customLocation = urlParams.get('customPrivacyLocation');
   if (customLocation) {
-    const locationData = JSON.stringify({ country: customLocation.toUpperCase() });
-    window.sessionStorage.setItem(config.location, locationData);
+    window.sessionStorage.setItem(config.location, JSON.stringify({
+      country: customLocation.toUpperCase(),
+    }));
+    window.OneTrust = window.OneTrust || {};
+    window.OneTrust.geolocationResponse = {
+      countryCode: customLocation.toUpperCase(),
+      stateCode: '',
+    };
   }
 
   if (document.querySelector('.privacy-banner')) return;
@@ -91,8 +98,7 @@ export default async function loadPrivacyBanner(config, getMetadata) {
 
   if (privacyState.hasExistingConsent()) return;
 
-  // GEO/CONFIG/PROFILE/GPC LOGIC
-  const otDomainId = config.privacyId || (config.privacy && config.privacy.otDomainId);
+  const otDomainId = clientConfig.privacyId || (clientConfig.privacy && clientConfig.privacy.otDomainId);
   const location = await getUserLocation();
   const otConfig = await getOneTrustConfig(otDomainId);
   const isGdpr = isGdprEnforcedCountry(location, otConfig);
@@ -148,7 +154,7 @@ export default async function loadPrivacyBanner(config, getMetadata) {
   btnAccept.onclick = async () => {
     privacyState.setConsent(initialConsent);
 
-    const otDomainId = config.privacyId || (config.privacy && config.privacy.otDomainId);
+    const otDomainId = clientConfig.privacyId || (clientConfig.privacy && clientConfig.privacy.otDomainId);
     await loadOneTrustScriptOnce(otDomainId);
     if (window.OneTrust && typeof window.OneTrust.AcceptAll === "function") {
       window.OneTrust.AcceptAll();
@@ -159,7 +165,7 @@ export default async function loadPrivacyBanner(config, getMetadata) {
   btnReject.onclick = async () => {
     privacyState.setConsent(['C0001']);
 
-    const otDomainId = config.privacyId || (config.privacy && config.privacy.otDomainId);
+    const otDomainId = clientConfig.privacyId || (clientConfig.privacy && clientConfig.privacy.otDomainId);
     await loadOneTrustScriptOnce(otDomainId);
     if (window.OneTrust && typeof window.OneTrust.RejectAll === "function") {
       window.OneTrust.RejectAll();
