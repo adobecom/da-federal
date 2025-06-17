@@ -59,13 +59,24 @@ const getUserLocation = () => new Promise((resolve) => {
     window[callback] = (data) => {
       const locationData = getLocationObject(data);
       window.sessionStorage.setItem(config.location, JSON.stringify(locationData));
-      resolve(locationData);
 
+      if (window.__PRIVACY_DEBUG__) {
+        console.log('[Privacy-Trace] Geo response received:', data);
+        console.log('[Privacy-Trace] Parsed location →', locationData);
+      }
+
+      resolve(locationData);
       delete window[callback];
     };
 
+    const geoScriptUrl = `${config.locationURL}${callback}`;
+
+    if (window.__PRIVACY_DEBUG__) {
+      console.log('[Privacy-Trace] Fetching geo from →', geoScriptUrl);
+    }
+
     loadResource({
-      path: `${config.locationURL}${callback}`,
+      path: geoScriptUrl,
       type: 'script',
     }).catch(() => {
       resolve({});

@@ -7,6 +7,10 @@ import { loadStyle } from './utilities/utilities.js';
 import { createTag } from './utilities/utilities.js';
 import { loadOneTrustScriptOnce } from './utilities/utilities.js';
 
+const trace = (...args) => {
+  if (window.__PRIVACY_DEBUG__) console.log('[Privacy-Trace]', ...args);
+};
+
 // Helper: fetch OneTrust config
 async function getOneTrustConfig(otDomainId) {
   if (!otDomainId) return null;
@@ -92,6 +96,11 @@ export default async function loadPrivacyBanner(config, getMetadata) {
   const location = await getUserLocation();
   const otConfig = await getOneTrustConfig(otDomainId);
   const isGdpr = isGdprEnforcedCountry(location, otConfig);
+
+   trace('location ⟶', location);                
++  trace('otDomainId ⟶', otDomainId);             
++  trace('otConfig loaded ⟶', !!otConfig);        
++  trace('isGdpr result ⟶', isGdpr);  
 
   const userProfileTags = [];
 
