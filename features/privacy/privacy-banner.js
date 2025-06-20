@@ -6,7 +6,7 @@ import isGPCEnabled from './utilities/helpers/isGPCEnabled.js';
 import { loadStyle } from './utilities/utilities.js';
 import { createTag } from './utilities/utilities.js';
 import { loadOneTrustScriptOnce } from './utilities/utilities.js';
-import config from './utilities//config.js';
+import config from './utilities/config.js';
 
 const trace = (...args) => {
   if (window.__PRIVACY_DEBUG__) console.log('[Privacy-Trace]', ...args);
