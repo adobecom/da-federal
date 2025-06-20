@@ -179,4 +179,6 @@ export default async function loadPrivacyBanner(clientConfig, getMetadata) {
   };
 
   document.body.append(banner);
+  performance.mark('Privacy-Banner-Visible');
+  performance.measure('Privacy-Banner-Time-To-Visible', 'navigationStart', 'Privacy-Banner-Visible');
 }

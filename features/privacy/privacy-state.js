@@ -159,7 +159,7 @@ function setConsent(groups) {
   }
   updateOneTrustRuntime(groups);
   setTimeout(() => updateOneTrustRuntime(groups), 0);
-
+  markConsentAvailable();
   fireConsentEvent();
 }
 
@@ -181,5 +181,11 @@ const privacyState = {
 };
 
 privacyState.activeCookieGroups = () => privacyState.getConsent()[0];
+function markConsentAvailable() {
+  if (!performance.getEntriesByName('Privacy-Consent-Available').length) {
+    performance.mark('Privacy-Consent-Available');
+    performance.measure('Privacy-Time-To-Consent', 'navigationStart', 'Privacy-Consent-Available');
+  }
+}
 window.adobePrivacy = privacyState;
 export default privacyState;
