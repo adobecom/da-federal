@@ -1,4 +1,4 @@
-import { IrrecoverableError } from "../Error/Error";
+import { IrrecoverableError, RecoverableError } from "../Error/Error";
 
 export const isDesktop = window.matchMedia('(min-width: 900px)');
 
@@ -93,7 +93,13 @@ export const parseListAndAccumulateErrors = <
     try {
       const [b, es] = parse(x);
       return [[...accB, b], [...accErrors, ...es]];
-    } catch {
+    } catch (e) {
+      if (e instanceof IrrecoverableError) {
+        return [accB, [
+          e as ErrorType,
+          ...accErrors]
+        ];
+      }
       return [accB, accErrors];
     }
   },
