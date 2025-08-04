@@ -1,0 +1,59 @@
+import { Component, parseComponent } from "../Components/Component";
+import { parseProductEntryCTA, ProductEntryCTA } from "../Components/CTA/Parse";
+import { Link, parseLink } from "../Components/Link/Parse";
+import { IrrecoverableError, RecoverableError } from "../Error/Error";
+import { parseListAndAccumulateErrors } from "../Utils/Utils";
+
+const federateUrl = (path: string): string => {
+  return path;
+}
+
+export type GlobalNavigationData = {
+  breadcrumbs: List<Link>;
+  menuComponents: List<Component>;
+  productCTA: ProductEntryCTA | null;
+  localnav: boolean;
+  errors: List<RecoverableError>;
+};
+
+export const parseNavigation = (
+  mainNav: DocumentFragment
+): GlobalNavigationData | IrrecoverableError => {
+  const [breadcrumbs, breadcrumbErrors]
+    = parseListAndAccumulateErrors(
+      [...document.querySelectorAll('.breadcrumbs ul > li > a') ?? []],
+      parseLink
+    );
+  const [menuComponents, componentErrors] 
+    = parseListAndAccumulateErrors(
+      [...mainNav.children],
+      parseComponent
+    ); 
+  const productEntryElement = mainNav.querySelector('.product-entry-cta');
+  const [productCTA, productCtaErrors]
+    = (
+  (): Parsed<ProductEntryCTA | null, RecoverableError> => {
+    try {
+      return parseProductEntryCTA(productEntryElement);
+    } catch (_) {
+      return [null, []];
+    }
+  })();
+  const localnav = menuComponents
+    .filter((component) =>
+            component.type === "MegaMenu" &&
+            component.isSection).length === 1;
+  const errors = [
+    breadcrumbErrors,
+    componentErrors,
+    productCtaErrors,
+  ].flat();
+
+  return {
+    breadcrumbs,
+    menuComponents,
+    productCTA,
+    localnav,
+    errors,
+  }
+};
