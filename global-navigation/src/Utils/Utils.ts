@@ -81,10 +81,14 @@ export const alternative = <T, R>(
   }
 };
 
-export const parseListAndAccumulateErrors = <A, B, C>(
-  xs: List<A>,
-  parse: (_: A) => Parsed<B, C>
-): Parsed<List<B>, C> => xs.reduce(
+export const parseListAndAccumulateErrors = <
+  UnParsedObj,
+  ParsedObj,
+  ErrorType
+  >(
+  xs: List<UnParsedObj>,
+  parse: (_: UnParsedObj) => Parsed<ParsedObj, ErrorType>
+): Parsed<List<ParsedObj>, ErrorType> => xs.reduce(
   ([accB, accErrors], x) => {
     try {
       const [b, es] = parse(x);
@@ -93,7 +97,7 @@ export const parseListAndAccumulateErrors = <A, B, C>(
       return [accB, accErrors];
     }
   },
-  [[],[]] as Parsed<List<B>, C>
+  [[],[]] as Parsed<List<ParsedObj>, ErrorType>
   );
 
 type CleanupFunction = () => void;
