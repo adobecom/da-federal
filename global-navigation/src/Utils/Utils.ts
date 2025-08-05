@@ -1,4 +1,4 @@
-import { IrrecoverableError, RecoverableError } from "../Error/Error";
+import { IrrecoverableError } from "../Error/Error";
 
 export const isDesktop = window.matchMedia('(min-width: 900px)');
 
@@ -131,20 +131,62 @@ export const setupMobileDesktopListeners = ({
   });
 };
 
-export const fetchAndCreateDocumentFragment = async (
+export const fetchAndProcessPlainHTML = async (
   source: URL | null
-): Promise<DocumentFragment | IrrecoverableError> => {
+): Promise<HTMLElement | IrrecoverableError> => {
   try {
     if (source === null)
       return new IrrecoverableError('URL is null');
-    const r = await fetch(source);
+    const r = await fetch(federateUrl(source.href));
     if (!r.ok)
       return new IrrecoverableError(`Request for ${source} failed`);
-    if (r.headers.get('Content-Type') !== 'text/html')
-      return new IrrecoverableError(`${source} returned `);
     const html = await r.text();
-    return document.createRange().createContextualFragment(html);
+    return new DOMParser().parseFromString(html, "text/html").body;
   } catch (e) {
     return new IrrecoverableError(JSON.stringify(e));
   }
+};
+
+const federateUrl = (path: string): string => {
+  if (path.endsWith('.plain.html')) return path;
+  return path.replace(/(\.html$|$)/, '.plain.html')
+}
+
+export const inlineNestedFragments = async (
+  el: Element | HTMLElement
+): Promise<Element | HTMLElement | IrrecoverableError> => {
+  const go = async (
+    element: Element | HTMLElement | IrrecoverableError,
+    visited: Set<string>
+  ): Promise<Element | HTMLElement | IrrecoverableError> => {
+    if (element instanceof IrrecoverableError)
+      return element;
+    try {
+      const links = ([...element.querySelectorAll('a[href*="#_inline"]')] as HTMLAnchorElement[])
+        .map(async (a: HTMLAnchorElement) => {
+          try {
+            if (visited.has(a.href)) return;
+            const federated = federateUrl(a.href);
+            const url = new URL(federated);
+            const fragment = await fetchAndProcessPlainHTML(url);
+            visited.add(a.href);
+            if (fragment instanceof IrrecoverableError)
+              throw fragment;
+            await go(fragment, visited);
+            const parent = a.closest('div');
+            [...parent?.children ?? []]
+              .forEach((c: Node) => parent?.removeChild(c));
+            parent?.append(fragment);
+            return;
+          } catch {
+            return;
+          }
+        }, [] as List<[HTMLAnchorElement, URL]>)
+      await Promise.all(links);
+      return element
+    } catch (e) {
+      return new IrrecoverableError(JSON.stringify(e));
+    }
+  }
+  return go(el, new Set());
 };

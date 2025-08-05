@@ -1,6 +1,6 @@
 import { IrrecoverableError } from "../Error/Error";
 import { Input } from "../Main";
-import { fetchAndCreateDocumentFragment } from "../Utils/Utils";
+import { fetchAndProcessPlainHTML } from "../Utils/Utils";
 
 type Initial = {
   mainNav: DocumentFragment;
@@ -11,10 +11,10 @@ export const getInitialHTML = async ({
   gnavSource,
   asideSource
 }: Input): Promise<Initial | IrrecoverableError> => {
-  const mainNav = await fetchAndCreateDocumentFragment(gnavSource);
+  const mainNav = await fetchAndProcessPlainHTML(gnavSource);
   if (mainNav instanceof IrrecoverableError)
     return mainNav;
-  const aside = await fetchAndCreateDocumentFragment(asideSource);
+  const aside = await fetchAndProcessPlainHTML(asideSource);
   return {
     mainNav,
     aside,

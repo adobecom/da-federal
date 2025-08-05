@@ -1,5 +1,5 @@
 import { IrrecoverableError, RecoverableError } from "../../Error/Error";
-import { parseListAndAccumulateErrors } from "../../Utils/Utils";
+import { fetchAndProcessPlainHTML, inlineNestedFragments, parseListAndAccumulateErrors } from "../../Utils/Utils";
 import { Column, parseColumn } from "../Column/Parse";
 import { Link, parseLink } from "../Link/Parse";
 
@@ -7,10 +7,11 @@ import { Link, parseLink } from "../Link/Parse";
 export type MegaMenu = {
   type: "MegaMenu";
   title: string;
-  columns: List<Column>;
+  columns: Promise<Parsed<List<Column>, RecoverableError>>;
   crossCloudMenu: List<Link>;
   isSection: boolean;
 };
+
 
 export const parseMegaMenu = (
   element: Element | null
@@ -23,11 +24,32 @@ export const parseMegaMenu = (
   if (title === "")
     errors.add(new RecoverableError(ERRORS.noTitle))
 
-  const unparsedColumns = [...element.children];
-  const [columns, columnErrors] = parseListAndAccumulateErrors(
-    unparsedColumns,
-    parseColumn
-  );
+  const columns = (async (): 
+                   Promise<Parsed<List<Column>, RecoverableError>> => {
+    try {
+      const fragment: HTMLAnchorElement | null = element.querySelector('h2 > a');
+      const fragmentURL = new URL(fragment?.href ?? "");
+      const initialFragment =
+        await fetchAndProcessPlainHTML(fragmentURL);
+      if (initialFragment instanceof IrrecoverableError)
+        throw new Error(initialFragment.message);
+      const megaMenuFragment = await inlineNestedFragments(initialFragment);
+      if (megaMenuFragment instanceof IrrecoverableError)
+        throw new Error(megaMenuFragment.message);
+      const unparsedColumns = [...megaMenuFragment.children]
+        .map(c => c.querySelector('main')?.firstElementChild)
+        .filter(c => c !== null && c !== undefined);
+      console.log(unparsedColumns[0].outerHTML);
+      console.log(unparsedColumns[1].outerHTML);
+      debugger;
+      return parseListAndAccumulateErrors(
+        unparsedColumns,
+        parseColumn
+      );
+    } catch (e) {
+        throw new IrrecoverableError(JSON.stringify(e));
+    }
+  })();
   const unparsedCrossCloud = element.querySelectorAll(
     '.cross-cloud-menu ul > li > a'
   );
@@ -47,7 +69,6 @@ export const parseMegaMenu = (
       isSection
     },
     [
-      ...columnErrors,
       ...ccmErrors,
       ...errors
     ]

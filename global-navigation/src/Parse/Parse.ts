@@ -4,13 +4,9 @@ import { Link, parseLink } from "../Components/Link/Parse";
 import { IrrecoverableError, RecoverableError } from "../Error/Error";
 import { parseListAndAccumulateErrors } from "../Utils/Utils";
 
-const federateUrl = (path: string): string => {
-  return path;
-}
-
 export type GlobalNavigationData = {
   breadcrumbs: List<Link>;
-  menuComponents: List<Component>;
+  components: List<Component | Promise<Component>>;
   productCTA: ProductEntryCTA | null;
   localnav: boolean;
   errors: List<RecoverableError>;
@@ -24,7 +20,7 @@ export const parseNavigation = (
       [...document.querySelectorAll('.breadcrumbs ul > li > a') ?? []],
       parseLink
     );
-  const [menuComponents, componentErrors] 
+  const [components, componentErrors] 
     = parseListAndAccumulateErrors(
       [...mainNav.children],
       parseComponent
@@ -39,8 +35,8 @@ export const parseNavigation = (
       return [null, []];
     }
   })();
-  const localnav = menuComponents
-    .filter((component) =>
+  const localnav = components
+    .filter((component): boolean =>
             component.type === "MegaMenu" &&
             component.isSection).length === 1;
   const errors = [
@@ -51,7 +47,7 @@ export const parseNavigation = (
 
   return {
     breadcrumbs,
-    menuComponents,
+    components,
     productCTA,
     localnav,
     errors,

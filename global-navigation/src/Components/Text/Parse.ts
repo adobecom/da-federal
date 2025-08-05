@@ -11,7 +11,7 @@ const ERRORS = {
 }
 
 export const parseText = (
-  element: HTMLElement | null
+  element: Element | null
 ): Parsed<Text, RecoverableError> => {
   if (element === null)
     return [

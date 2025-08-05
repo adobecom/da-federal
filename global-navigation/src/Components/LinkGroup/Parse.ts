@@ -77,7 +77,7 @@ const parseLinkGroupLink = (
   if (!element)
     throw new IrrecoverableError(ERRORS.elementNull);
 
-  const titleElement = element.querySelector("p > a");
+  const titleElement = element.querySelector("p a");
   if (!titleElement)
     throw new IrrecoverableError(ERRORS.noTitleAnchor);
 
