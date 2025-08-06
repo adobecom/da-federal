@@ -22,7 +22,7 @@ export const parseColumn = (
     .or(parseMenuPromo)
     .eval(el);
 
-type ColumnItem
+export type ColumnItem
   = LinkGroup
   | Link
   | PrimaryCTA
@@ -124,7 +124,7 @@ export const parseSingleColumnSectionList = (
   ];
 };
 
-type MultiColumnSection = {
+export type MultiColumnSection = {
   type: "MultiColumnSection";
   title: string;
   columns: List<List<ColumnItem>>;
@@ -161,7 +161,7 @@ const parseMultiColumnSection = (
 };
 
 export type MenuPromo = {
-  type: "MegaMenuPromo";
+  type: "MenuPromo";
   content: HTML;
 };
 
@@ -179,7 +179,7 @@ export const parseMenuPromo = (
     throw new IrrecoverableError(ERRORS.noPromoContent);
   return [
     {
-      type: "MegaMenuPromo",
+      type: "MenuPromo",
       content
     },
     []

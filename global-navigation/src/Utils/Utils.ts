@@ -141,15 +141,19 @@ export const fetchAndProcessPlainHTML = async (
     if (!r.ok)
       return new IrrecoverableError(`Request for ${source} failed`);
     const html = await r.text();
-    return new DOMParser().parseFromString(html, "text/html").body;
+  
+    const { body } = new DOMParser().parseFromString(html, "text/html");
+    return body;
   } catch (e) {
     return new IrrecoverableError(JSON.stringify(e));
   }
 };
 
 const federateUrl = (path: string): string => {
-  if (path.endsWith('.plain.html')) return path;
-  return path.replace(/(\.html$|$)/, '.plain.html')
+  // Prevent double .plain.html by first removing any existing .plain.html, then adding it
+  const cleanedPath = path.replace(/\.plain\.html(?=[?#]|$)/, '.html');
+  // Handles .html, .html#hash, .html?query, or no extension
+  return cleanedPath.replace(/\.html(?=[?#]|$)|(?=[?#]|$)/, '.plain.html');
 }
 
 export const inlineNestedFragments = async (
@@ -174,9 +178,9 @@ export const inlineNestedFragments = async (
               throw fragment;
             await go(fragment, visited);
             const parent = a.closest('div');
-            [...parent?.children ?? []]
-              .forEach((c: Node) => parent?.removeChild(c));
-            parent?.append(fragment);
+            if (parent) {
+              parent.replaceChildren(...fragment.children);
+            }
             return;
           } catch {
             return;
@@ -189,4 +193,25 @@ export const inlineNestedFragments = async (
     }
   }
   return go(el, new Set());
+};
+
+export const renderListItems = <T>(
+  items: T[],
+  renderFn: (item: T) => string
+): string => {
+  return items.map(item => `<li>${renderFn(item)}</li>`).join('');
+};
+
+export const sanitize = (str: string): string => {
+  return str
+    .toLowerCase()
+    .trim()
+    // Replace spaces and non-alphanumeric characters with hyphens
+    .replace(/[^a-z0-9]/g, '-')
+    // Remove multiple consecutive hyphens
+    .replace(/-+/g, '-')
+    // Remove leading/trailing hyphens
+    .replace(/^-+|-+$/g, '')
+    // Ensure it starts with a letter (prepend 'id-' if it starts with a number)
+    .replace(/^(\d)/, 'id-$1')
 };

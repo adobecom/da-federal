@@ -3,8 +3,8 @@ import { Input } from "../Main";
 import { fetchAndProcessPlainHTML } from "../Utils/Utils";
 
 type Initial = {
-  mainNav: DocumentFragment;
-  aside: DocumentFragment | IrrecoverableError;
+  mainNav: HTMLElement;
+  aside: HTMLElement | IrrecoverableError;
 };
 
 export const getInitialHTML = async ({

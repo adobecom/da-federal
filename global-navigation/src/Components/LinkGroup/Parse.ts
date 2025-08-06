@@ -2,13 +2,13 @@ import { IrrecoverableError, RecoverableError } from "../../Error/Error";
 import { alternative } from "../../Utils/Utils";
 import { Link, parseLink } from "../Link/Parse";
 
-type LinkGroupHeader = {
+export type LinkGroupHeader = {
   type: "LinkGroupHeader";
   title: string;
   classes: string[];
 };
 
-type LinkGroupLink = {
+export type LinkGroupLink = {
   type: "LinkGroupLink";
   iconHref: string | null;
   iconAlt: string | null;
@@ -17,7 +17,7 @@ type LinkGroupLink = {
   subtitle: string;
 }
 
-type LinkGroupBlue = {
+export type LinkGroupBlue = {
   type: "LinkGroupBlue";
   link: Link;
 };

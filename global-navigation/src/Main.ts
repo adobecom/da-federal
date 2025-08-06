@@ -1,9 +1,14 @@
+import { column } from "./Components/Column/Render";
+import { component } from "./Components/Component";
+import { productEntryCTA } from "./Components/CTA/Render";
+import { renderGhostColumns } from "./Components/MegaMenu/Render";
 import { IrrecoverableError, RecoverableError } from "./Error/Error";
 import { GlobalNavigationData, parseNavigation } from "./Parse/Parse";
 import { initClickListeners } from "./PostRendering/ClickListeners";
 import { initKeyboardNav } from "./PostRendering/Keyboard";
 import { UnavConfig } from "./PostRendering/Unav";
 import { getInitialHTML } from "./PreRendering/FetchAssets";
+import { renderListItems } from "./Utils/Utils";
 
 
 type GlobalNavigation = {
@@ -21,6 +26,10 @@ export type Input = {
   isLocalNav: boolean;
   mountpoint: HTMLElement;
   unavEnabled: boolean;
+  // MEP: {
+  //   commands: unknown;
+  //   handleCommands: (_: unknown) => unknown;
+  // }
 };
 
 export const main = async (
@@ -46,16 +55,44 @@ export const main = async (
 
 
 export const renderGnav = (
-  _data_: GlobalNavigationData
-) => (
-_mountpoint: HTMLElement
-): 1 | IrrecoverableError => {
-  return new IrrecoverableError("Not yet implemented");
+  data: GlobalNavigationData
+) => async (
+mountpoint: HTMLElement
+): Promise<HTMLElement> => {
+  const navHTML = renderGnavString(data)
+  mountpoint.innerHTML = navHTML;
+  const megaMenus = [
+    ...mountpoint.querySelectorAll('.mega-menu ~ .feds-popup > ul')
+  ]
+  megaMenus.forEach(mm => {
+    mm.innerHTML = renderGhostColumns();
+  });
+  const mmPromises = data.components
+    .filter(com => com.type === "MegaMenu")
+    .map(com => com.columns);
+  const _errors_ = await Promise.all(mmPromises.map(async (mmPromise, idx) => {
+    const [columns, errors] = await mmPromise;
+    const renderedColumns = renderListItems(columns, column);
+    megaMenus[idx].innerHTML = renderedColumns;
+    return errors;
+  }).flat());
+  return mountpoint;
 };
 
-export const renderGnavString = (
-  _data: GlobalNavigationData
-): string => '';
+export const renderGnavString = ({
+  components,
+  productCTA,
+}: GlobalNavigationData
+): string => `
+<nav>
+  <ul>
+    ${renderListItems(components, component)}
+  </ul>
+  ${productCTA === null ? '' : productEntryCTA(productCTA)}
+  <div class="feds-utilities">
+  </div>
+</nav>
+`;
 
 
 export const postRenderingTasks = (

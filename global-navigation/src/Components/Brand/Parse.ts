@@ -1,4 +1,4 @@
-import { IrrecoverableError, RecoverableError } from "../../Error/Error";
+import { RecoverableError } from "../../Error/Error";
 
 export type Brand = {
   type: "Brand";
@@ -6,6 +6,7 @@ export type Brand = {
   altText: string;
   render: boolean;
   brandImageOnly: boolean;
+  href: URL;
 };
 
 // TODO: Implement this for real.
@@ -19,6 +20,7 @@ export const parseBrand = (
       altText: "Adobe .Inc.",
       render: true,
       brandImageOnly: true,
+      href: new URL('https://www.adobe.com')
     },
     []
   ]

@@ -6,14 +6,14 @@ import { parseListAndAccumulateErrors } from "../Utils/Utils";
 
 export type GlobalNavigationData = {
   breadcrumbs: List<Link>;
-  components: List<Component | Promise<Component>>;
+  components: List<Component>;
   productCTA: ProductEntryCTA | null;
   localnav: boolean;
   errors: List<RecoverableError>;
 };
 
 export const parseNavigation = (
-  mainNav: DocumentFragment
+  mainNav: HTMLElement
 ): GlobalNavigationData | IrrecoverableError => {
   const [breadcrumbs, breadcrumbErrors]
     = parseListAndAccumulateErrors(

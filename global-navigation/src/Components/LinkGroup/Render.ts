@@ -1,9 +1,10 @@
-import { LinkGroup, LinkGroupHeader, LinkGroupLink } from "./Parse";
+import { LinkGroup, LinkGroupBlue, LinkGroupHeader, LinkGroupLink } from "./Parse";
 
 export const linkGroup = (lg: LinkGroup): HTML => {
   switch (lg.type) {
     case "LinkGroupHeader": return linkGroupHeader(lg);
     case "LinkGroupLink": return linkGroupLink(lg);
+    case "LinkGroupBlue": return linkGroupBlue(lg);
     default: {
       const exhaustivenessCheck: never = lg;
       console.error(exhaustivenessCheck);
@@ -50,3 +51,12 @@ const linkGroupLink = ({
     </a>
   `
 }
+
+const linkGroupBlue = ({
+  link
+}: LinkGroupBlue): HTML => `
+  <a href="${link.href}" class="link-group blue">
+    ${link.text}
+  </a>
+`;
+

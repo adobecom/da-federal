@@ -37,6 +37,8 @@ export const parseMegaMenu = (
       if (megaMenuFragment instanceof IrrecoverableError)
         throw new Error(megaMenuFragment.message);
       const unparsedColumns = [...megaMenuFragment.children]
+        .map(c => c.firstElementChild ?? c);
+      unparsedColumns.forEach(c => console.log(c.outerHTML));
       return parseListAndAccumulateErrors(
         unparsedColumns,
         parseColumn
