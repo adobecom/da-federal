@@ -1,0 +1,75 @@
+import { IrrecoverableError, RecoverableError } from "../Error/Error";
+import { Brand, parseBrand } from "./Brand/Parse";
+import { brand } from "./Brand/Render";
+import { parsePrimaryCTA, parseSecondaryCTA, PrimaryCTA, SecondaryCTA } from "./CTA/Parse";
+import { primaryCTA, secondaryCTA } from "./CTA/Render";
+import { Link, parseLink } from "./Link/Parse";
+import { link } from "./Link/Render";
+import { MegaMenu, parseMegaMenu } from "./MegaMenu/Parse";
+import { megaMenu } from "./MegaMenu/Render";
+import { parseSmallMenu, SmallMenu } from "./SmallMenu/Parse";
+import { smallMenu } from "./SmallMenu/Render";
+import { parseText, Text } from "./Text/Parse";
+import { text } from "./Text/Render";
+
+export type Component
+  = Text
+  | Link
+  | SecondaryCTA
+  | PrimaryCTA
+  | Brand
+  | SmallMenu
+  | MegaMenu;
+
+export const parseComponent = (
+  element: Element
+): Parsed<Component, RecoverableError> => {
+  if (element === null)
+    throw new IrrecoverableError(ERRORS.elementNull);
+
+  const brand = element.querySelector('.gnav-brand');
+  if (brand !== null) 
+    return parseBrand(element)
+
+  const largeMenu = element.querySelector('.large-menu');
+  if (largeMenu !== null)
+    return parseMegaMenu(largeMenu);
+
+  if (element.querySelector('h5, ul, link-group') !== null)
+    return parseSmallMenu(element);
+
+  if (element.querySelector('strong') !== null)
+    return parsePrimaryCTA(element);
+  
+  if (element.querySelector('em') !== null)
+    return parseSecondaryCTA(element);
+
+  if (element.querySelector('a') === null)
+    return parseText(element);
+
+  return parseLink(element.querySelector('a'));
+};
+
+export const component = (
+  c: Component
+): HTML => {
+  switch (c.type) {
+    case "Text": return text(c);
+    case "Link": return link(c);
+    case "SecondaryCTA": return secondaryCTA(c);
+    case "PrimaryCTA": return primaryCTA(c);
+    case "Brand": return brand(c);
+    case "SmallMenu": return smallMenu(c);
+    case "MegaMenu": return megaMenu(c);
+    default: {
+      const exhaustive : never = c;
+      console.error(`Failed to recognize component: ${exhaustive}`);
+      return '';
+    }
+  }
+};
+
+const ERRORS = {
+  elementNull: "Element is null",
+};
+
