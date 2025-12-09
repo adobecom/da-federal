@@ -1,9 +1,6 @@
 # Dependencies
 node_modules/
 
-# TypeScript build output
-dist/
-
 # IDE and editor files
 .vscode/
 .idea/

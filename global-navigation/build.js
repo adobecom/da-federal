@@ -4,7 +4,7 @@ import { execSync } from 'child_process';
 const isWatch = process.argv.includes('--watch');
 
 const buildOptions = {
-  entryPoints: ['src/main.ts'],
+  entryPoints: ['src/Main.ts'],
   bundle: true,
   outfile: 'dist/main.js',
   format: 'esm',
