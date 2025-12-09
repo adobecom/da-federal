@@ -86,21 +86,21 @@ export const parseListAndAccumulateErrors = <
   ParsedObj,
   ErrorType
   >(
-  xs: List<UnParsedObj>,
+  elements: List<UnParsedObj>,
   parse: (_: UnParsedObj) => Parsed<ParsedObj, ErrorType>
-): Parsed<List<ParsedObj>, ErrorType> => xs.reduce(
-  ([accB, accErrors], x) => {
+): Parsed<List<ParsedObj>, ErrorType> => elements.reduce(
+  ([accElems, accErrors], elem) => {
     try {
-      const [b, es] = parse(x);
-      return [[...accB, b], [...accErrors, ...es]];
+      const [parseElems, errors] = parse(elem);
+      return [[...accElems, parseElems], [...accErrors, ...errors]];
     } catch (e) {
       if (e instanceof IrrecoverableError) {
-        return [accB, [
+        return [accElems, [
           e as ErrorType,
           ...accErrors]
         ];
       }
-      return [accB, accErrors];
+      return [accElems, accErrors];
     }
   },
   [[],[]] as Parsed<List<ParsedObj>, ErrorType>

@@ -27,8 +27,8 @@ export const parseComponent = (
   if (element === null)
     throw new IrrecoverableError(ERRORS.elementNull);
 
-  const brand = element.querySelector('.gnav-brand');
-  if (brand !== null) 
+  const brandElem = element.querySelector('.gnav-brand');
+  if (brandElem !== null) 
     return parseBrand(element)
 
   const largeMenu = element.querySelector('.large-menu');
