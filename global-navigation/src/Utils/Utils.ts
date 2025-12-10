@@ -15,18 +15,18 @@ export const icons = {
 export const split = <T>(
   predicate: (_: T) => boolean
 ) => (arr: T[]): T[][] => {
-  const accumulator = [];
-  let current = [];
+  const splitArrays = [];
+  let currSubArray = [];
   for (let i = 0; i < arr.length; i++) {
     if (predicate(arr[i])) {
-      accumulator.push(current);
-      current = [];
+      splitArrays.push(currSubArray);
+      currSubArray = [];
       continue;
     }
-    current.push(arr[i]);
+    currSubArray.push(arr[i]);
   }
-  accumulator.push(current);
-  return accumulator;
+  splitArrays.push(currSubArray);
+  return splitArrays;
 };
 
 export const takeWhile = <T>(
@@ -34,9 +34,9 @@ export const takeWhile = <T>(
 ) => (arr: T[]): T[] => {
   if (arr.length === 0)
     return arr;
-  const [x, ...xs] = arr;
-  if (predicate(x))
-    return [x].concat(takeWhile(predicate)(xs));
+  const [firstItem, ...remainingItems] = arr;
+  if (predicate(firstItem))
+    return [firstItem].concat(takeWhile(predicate)(remainingItems));
   return [];
 };
 
@@ -45,10 +45,10 @@ export const dropWhile = <T>(
 ) => (arr: T[]): T[] => {
   if (arr.length === 0)
     return arr;
-  const [x, ...xs] = arr;
-  if (predicate(x))
-    return dropWhile(predicate)(xs);
-  return xs;
+  const [firstItem, ...remainingItems] = arr;
+  if (predicate(firstItem))
+    return dropWhile(predicate)(remainingItems);
+  return remainingItems;
 };
 
 export const getNextSiblings = (element: Element): Element[] => {
@@ -61,21 +61,23 @@ export const getNextSiblings = (element: Element): Element[] => {
   return accumulator;
 };
 
-type Alternative<T, R> = {
-  or: (g: (_: R) => T) => Alternative<T, R>;
-  eval: (_: R) => T;
+type Alternative<ReturnType, InputType> = {
+  or: (
+    fallbackFn: (input: InputType) => ReturnType
+  ) => Alternative<ReturnType, InputType>;
+  eval: (input: InputType) => ReturnType;
 };
 
-export const alternative = <T, R>(
-  f: (_: R) => T
-): Alternative<T, R> => {
+export const alternative = <ReturnType, InputType>(
+  primaryFn: (input: InputType) => ReturnType
+): Alternative<ReturnType, InputType> => {
   return {
-    eval: f,
-    or: (g) => alternative((r) => {
+    eval: primaryFn,
+    or: (fallbackFn) => alternative((input) => {
       try {
-        return f(r)
-      } catch (_) {
-        return g(r);
+        return primaryFn(input)
+      } catch (_error) {
+        return fallbackFn(input);
       }
     })
   }
@@ -87,16 +89,19 @@ export const parseListAndAccumulateErrors = <
   ErrorType
   >(
   elements: List<UnParsedObj>,
-  parse: (_: UnParsedObj) => Parsed<ParsedObj, ErrorType>
+  parse: (element: UnParsedObj) => Parsed<ParsedObj, ErrorType>
 ): Parsed<List<ParsedObj>, ErrorType> => elements.reduce(
-  ([accElems, accErrors], elem) => {
+  ([accElems, accErrors], element) => {
     try {
-      const [parseElems, errors] = parse(elem);
-      return [[...accElems, parseElems], [...accErrors, ...errors]];
-    } catch (e) {
-      if (e instanceof IrrecoverableError) {
+      const [parsedElement, parseErrors] = parse(element);
+      return [
+        [...accElems, parsedElement],
+        [...accErrors, ...parseErrors]
+      ];
+    } catch (error) {
+      if (error instanceof IrrecoverableError) {
         return [accElems, [
-          e as ErrorType,
+          error as ErrorType,
           ...accErrors]
         ];
       }
@@ -137,62 +142,66 @@ export const fetchAndProcessPlainHTML = async (
   try {
     if (source === null)
       return new IrrecoverableError('URL is null');
-    const r = await fetch(federateUrl(source.href));
-    if (!r.ok)
+    const response = await fetch(federateUrl(source.href));
+    if (!response.ok)
       return new IrrecoverableError(`Request for ${source} failed`);
-    const html = await r.text();
+    const htmlText = await response.text();
   
-    const { body } = new DOMParser().parseFromString(html, "text/html");
+    const { body } = new DOMParser().parseFromString(htmlText, "text/html");
     return body;
-  } catch (e) {
-    return new IrrecoverableError(JSON.stringify(e));
+  } catch (error) {
+    return new IrrecoverableError(JSON.stringify(error));
   }
 };
 
 const federateUrl = (path: string): string => {
-  // Prevent double .plain.html by first removing any existing .plain.html, then adding it
+  // Prevent double .plain.html by first removing any existing
+  // .plain.html, then adding it back
   const cleanedPath = path.replace(/\.plain\.html(?=[?#]|$)/, '.html');
   // Handles .html, .html#hash, .html?query, or no extension
   return cleanedPath.replace(/\.html(?=[?#]|$)|(?=[?#]|$)/, '.plain.html');
 }
 
 export const inlineNestedFragments = async (
-  el: Element | HTMLElement
+  element: Element | HTMLElement
 ): Promise<Element | HTMLElement | IrrecoverableError> => {
-  const go = async (
-    element: Element | HTMLElement | IrrecoverableError,
-    visited: Set<string>
+  const processElement = async (
+    currentElem: Element | HTMLElement | IrrecoverableError,
+    visitedUrls: Set<string>
   ): Promise<Element | HTMLElement | IrrecoverableError> => {
-    if (element instanceof IrrecoverableError)
-      return element;
+    if (currentElem instanceof IrrecoverableError)
+      return currentElem;
     try {
-      const links = ([...element.querySelectorAll('a[href*="#_inline"]')] as HTMLAnchorElement[])
-        .map(async (a: HTMLAnchorElement) => {
+      const anchorElements = [
+        ...currentElem.querySelectorAll('a[href*="#_inline"]')
+      ] as HTMLAnchorElement[];
+      const inlineLinks = anchorElements
+        .map(async (anchorElement: HTMLAnchorElement) => {
           try {
-            if (visited.has(a.href)) return;
-            const federated = federateUrl(a.href);
-            const url = new URL(federated);
-            const fragment = await fetchAndProcessPlainHTML(url);
-            visited.add(a.href);
-            if (fragment instanceof IrrecoverableError)
-              throw fragment;
-            await go(fragment, visited);
-            const parent = a.closest('div');
-            if (parent) {
-              parent.replaceChildren(...fragment.children);
+            if (visitedUrls.has(anchorElement.href)) return;
+            const federatedUrl = federateUrl(anchorElement.href);
+            const fragmentUrl = new URL(federatedUrl);
+            const fragmentBody = await fetchAndProcessPlainHTML(fragmentUrl);
+            visitedUrls.add(anchorElement.href);
+            if (fragmentBody instanceof IrrecoverableError)
+              throw fragmentBody;
+            await processElement(fragmentBody, visitedUrls);
+            const parentDiv = anchorElement.closest('div');
+            if (parentDiv) {
+              parentDiv.replaceChildren(...fragmentBody.children);
             }
             return;
           } catch {
             return;
           }
         }, [] as List<[HTMLAnchorElement, URL]>)
-      await Promise.all(links);
-      return element
-    } catch (e) {
-      return new IrrecoverableError(JSON.stringify(e));
+      await Promise.all(inlineLinks);
+      return currentElem
+    } catch (error) {
+      return new IrrecoverableError(JSON.stringify(error));
     }
   }
-  return go(el, new Set());
+  return processElement(element, new Set());
 };
 
 export const renderListItems = <T>(
