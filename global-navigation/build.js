@@ -12,28 +12,25 @@ const buildOptions = {
   target: ['es2020'],
   minify: true,
   sourcemap: true,
-  external: [], // Add any external dependencies here
+  logLevel: 'info',
 };
 
-const build = async () => {
-  try {
-    // Run TypeScript type checking first
-    console.log('Running TypeScript type checking...');
-    execSync('tsc --noEmit', { stdio: 'inherit' });
-    console.log('TypeScript type checking passed!');
-
-    if (isWatch) {
-      const context = await esbuild.context(buildOptions);
-      await context.watch();
-      console.log('Watching for changes...');
-    } else {
-      await esbuild.build(buildOptions);
-      console.log('Build completed successfully');
-    }
-  } catch (error) {
-    console.error('Build failed:', error);
-    process.exit(1);
-  }
-};
-
-build();
+if (isWatch) {
+  const context = await esbuild.context({
+    ...buildOptions,
+    plugins: [{
+      name: 'type-check',
+      setup(build) {
+        build.onStart(() => {
+          execSync('tsc --noEmit', { stdio: 'inherit' });
+        });
+      },
+    }],
+  });
+  await context.watch();
+} else {
+  execSync('tsc --noEmit', { stdio: 'inherit' });
+  
+  await esbuild.build(buildOptions);
+  console.log('Build complete');
+}
