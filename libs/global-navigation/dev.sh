@@ -37,7 +37,7 @@ sleep 1
 (cd ../.. && aem up &> /dev/null) &
 AEM_PID=$!
 
-echo -e "You can find the built file at ${GREEN}http://localhost:3000/global-navigation/dist/main.js${NC}"
+echo -e "You can find the built file at ${GREEN}http://localhost:3000/libs/global-navigation/dist/main.js${NC}"
 echo -e "${GREEN}Ready - Press Ctrl+C to stop${NC}"
 echo -e "Build: $BUILD_PID | AEM: $AEM_PID"
 
