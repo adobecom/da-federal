@@ -26,6 +26,9 @@ export type Input = {
   isLocalNav: boolean;
   mountpoint: HTMLElement;
   unavEnabled: boolean;
+
+  getStageDomainMap: (domainmap: unknown[], env: string) =>
+    { [key: string]: string }
   // MEP: {
   //   commands: unknown;
   //   handleCommands: (_: unknown) => unknown;
