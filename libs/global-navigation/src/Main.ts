@@ -38,16 +38,19 @@ export type Input = {
 export const main = async (
   input: Input
 ): Promise<GlobalNavigation | IrrecoverableError> => {
+  if (!(input.gnavSource instanceof URL)) {
+    throw new IrrecoverableError("gnavSource needs to be a URL object");
+  }
   const initial = await getInitialHTML(input)
   if (initial instanceof IrrecoverableError)
-    return initial;
+    throw initial;
   const { mainNav, aside: _aside } = initial;
   if (mainNav instanceof IrrecoverableError)
-    return mainNav;
+    throw mainNav;
 
   const gnavData = parseNavigation(mainNav);
   if (gnavData instanceof IrrecoverableError)
-    return gnavData;
+    throw gnavData;
   
   // TODO: Implement Aside
   

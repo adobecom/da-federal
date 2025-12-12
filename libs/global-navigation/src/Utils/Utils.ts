@@ -150,13 +150,14 @@ export const fetchAndProcessPlainHTML = async (
     const { body } = new DOMParser().parseFromString(htmlText, "text/html");
     return body;
   } catch (error) {
-    return new IrrecoverableError(JSON.stringify(error));
+    // @ts-expect-error errors usually have a message
+    return new IrrecoverableError(error?.message);
   }
 };
 
 const federateUrl = (path: string): string => {
-  // Prevent double .plain.html by first removing any existing
-  // .plain.html, then adding it back
+  // Prevent double .plain.html by first removing
+  // any existing .plain.html, then adding it
   const cleanedPath = path.replace(/\.plain\.html(?=[?#]|$)/, '.html');
   // Handles .html, .html#hash, .html?query, or no extension
   return cleanedPath.replace(/\.html(?=[?#]|$)|(?=[?#]|$)/, '.plain.html');
