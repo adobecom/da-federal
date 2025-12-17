@@ -45,7 +45,7 @@ var Le=`/**
 
     .feds-link-group__title {
         font-size: 1.25rem;
-        line-height: 1.438rem;
+        line-height: 115%;
         padding-bottom: 10px;
     }
 
@@ -55,7 +55,7 @@ var Le=`/**
 
     .feds-link-group__subtitle {
         font-size: 0.875rem;
-        line-height: 1.225rem;
+        line-height: 140%;
     }
 
     .feds-link-group:hover .feds-link-group__subtitle {
