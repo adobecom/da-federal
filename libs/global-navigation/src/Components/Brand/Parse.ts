@@ -25,59 +25,32 @@ const IMG_REGEX = /(\.png|\.jpg|\.jpeg|\.svg)/i;
  * Extracts image source from a link element or picture element
  */
 const extractImageSource = (element: Element): string | null => {
-  // Check for picture > img elements
-  const img = element.querySelector('picture img');
-  if (img !== null) {
-    const src = img.getAttribute('src');
-    if (src !== null && src.length > 0) {
-      return src;
-    }
+  const imgSrc = element.querySelector('picture img')?.getAttribute('src') ?? null;
+  if (imgSrc !== null && imgSrc !== '') return imgSrc;
+
+  const text = element.textContent?.trim();
+  if (text !== undefined && text !== '' && IMG_REGEX.test(text)) {
+    const source = text.split('|')[0]?.trim();
+    if (source !== undefined && source !== '') return source;
   }
 
-  // Check for text content in format "source|alt"
-  const textContent = element.textContent?.trim();
-  if (textContent !== null && textContent !== undefined 
-    && textContent.length > 0 && IMG_REGEX.test(textContent)) {
-    const [source] = textContent.split('|');
-    const trimmedSource = source.trim();
-    if (trimmedSource.length > 0) {
-      return trimmedSource;
-    }
-  }
-
-  // Check if the link itself points to an image
   const href = element.getAttribute('href');
-  if (href !== null && href.length > 0 && IMG_REGEX.test(href)) {
-    return href;
-  }
-
-  return null;
+  return href !== null && href !== '' && IMG_REGEX.test(href) ? href : null;
 };
 
 /**
  * Extracts alt text from image content
  */
 const extractAltText = (element: Element): string => {
-  const textContent = element.textContent?.trim();
+  const text = element.textContent?.trim();
 
-  // Check for format "source|alt"
-  if (textContent !== null && textContent !== undefined && textContent.includes('|')) {
-    const [, alt] = textContent.split('|');
-    const trimmedAlt = alt?.trim();
-    if (trimmedAlt !== null && trimmedAlt !== undefined) {
-      return trimmedAlt;
-    }
+  if (text?.includes('|') === true) {
+    const alt = text.split('|')[1]?.trim();
+    if (alt) return alt;
   }
 
-  const img = element.querySelector('img');
-  if (img !== null) {
-    const alt = img.getAttribute('alt');
-    if (alt !== null) {
-      return alt;
-    }
-  }
-
-  return '';
+  const altAttr = element.querySelector('img')?.getAttribute('alt');
+  return altAttr ?? '';
 };
 
 export const parseBrand = (
