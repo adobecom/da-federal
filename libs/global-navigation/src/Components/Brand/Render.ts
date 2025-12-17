@@ -1,10 +1,6 @@
 import { Brand } from "./Parse";
+import { isDarkMode } from "../../Utils/Utils";
 import './brand.css';
-
-const isDarkMode = (): boolean => {
- // TODO: Implement dark mode detection
-  return true;
-};
 
 const createImageElement = ({
   renderImage,
