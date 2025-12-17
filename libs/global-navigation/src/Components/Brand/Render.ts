@@ -52,7 +52,7 @@ const createLabelElement = ({
 export const brand = (brandData: Brand): HTML => {
   const { href, renderImage, renderLabel, altText } = brandData;
 
-  if (!renderImage && !renderLabel)  return '';
+  if (!renderImage && !renderLabel) return '';
 
   const imageElement = createImageElement(brandData);
   const labelElement = createLabelElement(brandData);

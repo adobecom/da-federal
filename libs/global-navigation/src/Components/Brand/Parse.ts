@@ -47,11 +47,7 @@ const extractImageSource = (element: Element): string | null => {
 
   // Check if the link itself points to an image
   const href = element.getAttribute('href');
-  if (
-    href !== null 
-    && href.length > 0 
-    && IMG_REGEX.test(href)
-  ) {
+  if (href !== null && href.length > 0 && IMG_REGEX.test(href)) {
     return href;
   }
 
@@ -65,11 +61,7 @@ const extractAltText = (element: Element): string => {
   const textContent = element.textContent?.trim();
 
   // Check for format "source|alt"
-  if (
-    textContent !== null 
-    && textContent !== undefined 
-    && textContent.includes('|')
-  ) {
+  if (textContent !== null && textContent !== undefined && textContent.includes('|')) {
     const [, alt] = textContent.split('|');
     const trimmedAlt = alt?.trim();
     if (trimmedAlt !== null && trimmedAlt !== undefined) {
@@ -100,7 +92,6 @@ export const parseBrand = (
     throw new IrrecoverableError(ERRORS.elementNull);
   }
 
-  // Get all links
   const blockLinks = [...rawBlock.querySelectorAll('a')] as HTMLAnchorElement[];
   if (blockLinks.length === 0) {
     throw new IrrecoverableError(ERRORS.noLinks);
@@ -150,9 +141,7 @@ export const parseBrand = (
   }
 
   // Check for SVG images in picture elements
-  const svgImagesNodeList = rawBlock.querySelectorAll(
-    'picture img[src$=".svg"]'
-  );
+  const svgImagesNodeList = rawBlock.querySelectorAll('picture img[src$=".svg"]');
   const svgImages = [...svgImagesNodeList] as HTMLImageElement[];
   if (svgImages.length > 0) {
     imgSrc = svgImages[0].src;
