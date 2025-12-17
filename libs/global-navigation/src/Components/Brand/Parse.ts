@@ -94,45 +94,34 @@ export const parseBrand = (
   });
 
   // Extract image sources (light and dark mode) and alt text
-  let imgSrc = '';
-  let imgSrcDark: string | undefined;
-  let altText = '';
-
-  if (imageLinks.length > 0) {
-    const extractedSrc = extractImageSource(imageLinks[0]);
-    imgSrc = extractedSrc ?? '';
-
-    // If there are two images, the second is for dark mode
-    if (imageLinks.length > 1) {
-      const extractedDarkSrc = extractImageSource(imageLinks[1]);
-      imgSrcDark = extractedDarkSrc ?? undefined;
-    }
-    altText = extractAltText(imageLinks[0]);
-  } else {
-    const labelText = primaryLink.textContent?.trim();
-    altText = labelText ?? '';
-  }
-
-  // Check for SVG images in picture elements
-  const svgImagesNodeList = rawBlock.querySelectorAll('picture img[src$=".svg"]');
-  const svgImages = [...svgImagesNodeList] as HTMLImageElement[];
-  if (svgImages.length > 0) {
-    imgSrc = svgImages[0].src;
-    if (svgImages.length > 1) {
-      imgSrcDark = svgImages[1].src;
-    }
-  }
-
-  // Fallback to default Adobe icons if no image found
-  if (imgSrc.length === 0) {
-    imgSrc = isBrandImageOnly ? icons.brand : icons.company;
-  }
+  const [imgSrc, imgSrcDark, altText] = ((): [
+    string, 
+    string | null, 
+    string
+  ] => {
+    const defaultImgSrc = isBrandImageOnly ? icons.brand : icons.company;
+  
+    const [svgImgSrc = null, svgDarkImgSrc = null] = ([...rawBlock.querySelectorAll('picture img[src$=".svg"]')] as HTMLImageElement[])
+      .map((img) => img?.src)
+      .filter((src) => src?.length > 0);
+  
+    const [imgSrc = '', imgSrcDark = null] = imageLinks.map(extractImageSource);
+    const altText = imageLinks[0] instanceof Element
+                  ? extractAltText(imageLinks[0])
+                  : primaryLink.textContent?.trim() ?? '';
+  
+    return [
+      imgSrc ?? svgImgSrc ?? defaultImgSrc,
+      imgSrcDark ?? svgDarkImgSrc,
+      altText
+    ];
+  })();
 
   return [
     {
       type: "Brand",
       imgSrc,
-      imgSrcDark,
+      imgSrcDark: imgSrcDark ?? undefined,
       altText,
       renderImage,
       renderLabel,
