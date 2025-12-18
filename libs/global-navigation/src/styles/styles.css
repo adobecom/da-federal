@@ -1,4 +1,3 @@
-
 /**
  * Global Navigation Styles
  * Styles for the federal global navigation component
@@ -8,7 +7,11 @@
    Header Container
    ======================================== */
 
-   header.global-navigation.site-pivot {
+header.global-navigation.site-pivot {
     display: block;
     visibility: visible;
-  }
+}
+
+header.global-navigation.site-pivot ul {
+    list-style: none;
+}

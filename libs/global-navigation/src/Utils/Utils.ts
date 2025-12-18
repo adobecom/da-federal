@@ -225,3 +225,9 @@ export const sanitize = (str: string): string => {
     // Ensure it starts with a letter (prepend 'id-' if it starts with a number)
     .replace(/^(\d)/, 'id-$1')
 };
+
+
+export const isDarkMode = (): boolean => {
+  // TODO: Implement dark mode detection
+  return true;
+};

@@ -1,0 +1,59 @@
+.feds-brand-container {
+    display: flex;
+    flex-shrink: 0;
+}
+
+.feds-brand {
+    display: flex;
+}
+
+.feds-brand,
+.feds-logo {
+    align-items: center;
+    outline-offset: 2px;
+    padding: 0 var(--feds-gutter);
+    column-gap: 10px;
+}
+
+.feds-brand-image,
+.feds-logo-image {
+    width: 25px;
+    flex-shrink: 0;
+}
+
+.feds-brand-image.brand-image-only {
+    height: 36px;
+    width: auto;
+    min-width: 66px;
+}
+
+.feds-brand-image.brand-image-only picture,
+.feds-brand-image.brand-image-only img,
+.feds-brand-image.brand-image-only svg {
+    width: auto;
+    height: 100%;
+}
+
+.feds-brand-image picture,
+.feds-brand-image img,
+.feds-brand-image svg,
+.feds-logo-image picture,
+.feds-logo-image img,
+.feds-logo-image svg {
+    width: 100%;
+    display: block;
+}
+
+.feds-brand-label,
+.feds-logo-label {
+    flex-shrink: 0;
+    font-weight: 700;
+    font-size: 18px;
+    color: var(--feds-color-adobeBrand);
+}
+
+@media (min-width: 900px) {
+    .feds-brand-image+.feds-brand-label {
+        display: flex;
+    }
+}
