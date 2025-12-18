@@ -1,18 +1,18 @@
 import { IrrecoverableError, RecoverableError } from "../../Error/Error";
-import { icons } from "../../Utils/Utils";
+import { icons, isDarkMode } from "../../Utils/Utils";
+
+type ImageData =
+  | { type: 'inline-svg'; svgContent: string; alt: string }
+  | { type: 'image'; src: string; alt: string };
 
 export type Brand = {
-  type: "Brand";
-  imgSrc: string;
-  imgSrcDark?: string;
-  altText: string;
-  label: string;
-  href: string;
-  renderImage: boolean;
-  renderLabel: boolean;
-  brandImageOnly: boolean;
+  type: 'Brand';
+  data: { type: 'LabelledBrand'; href: string; label: string; image: ImageData }
+  | { type: 'BrandImageOnly'; href: string; image: ImageData; alt: string }
+  | { type: 'ImageOnlyBrand'; href: string; image: ImageData; alt: string }
+  | { type: 'BrandLabelOnly'; href: string; label: string }
+  | { type: 'NoRender' };
 };
-
 const ERRORS = {
   elementNull: "Error when parsing Brand. Element is null",
   noLinks: "Error when parsing Brand. No links found",
@@ -117,18 +117,31 @@ export const parseBrand = (
     ];
   })();
 
-  return [
-    {
-      type: "Brand",
-      imgSrc,
-      imgSrcDark: imgSrcDark ?? undefined,
-      altText,
-      renderImage,
-      renderLabel,
-      href: primaryLink.href,
-      brandImageOnly: isBrandImageOnly,
-      label: primaryLink.textContent?.trim() ?? '',
-    },
-    []
-  ];
+  const label = primaryLink.textContent?.trim() ?? '';
+  const href = primaryLink.href;
+
+  if (!renderImage && !renderLabel) return [{ type: 'Brand', data: { type: 'NoRender' } }, []];
+
+  const selectSource = (light: string, dark: string | null): string => {
+    const hasDark = dark !== null && dark !== undefined && dark !== '';
+    return isDarkMode() && hasDark ? dark : light;
+  };
+
+  const imageData: ImageData = imgSrc.startsWith('<svg')
+    ? { type: 'inline-svg', svgContent: selectSource(imgSrc, imgSrcDark), alt: altText }
+    : { type: 'image', src: selectSource(imgSrc, imgSrcDark), alt: altText };
+
+  if (renderImage && renderLabel) {
+    return [{ type: 'Brand', data: { type: 'LabelledBrand', href, label, image: imageData } }, []];
+  }
+
+  if (renderImage && isBrandImageOnly) {
+    return [{ type: 'Brand', data: { type: 'BrandImageOnly', href, image: imageData, alt: altText } }, []];
+  }
+
+  if (renderImage && imageOnly) {
+    return [{ type: 'Brand', data: { type: 'ImageOnlyBrand', href, image: imageData, alt: altText } }, []];
+  }
+
+  return [{ type: 'Brand', data: { type: 'BrandLabelOnly', href, label } }, []];
 };

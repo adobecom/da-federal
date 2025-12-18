@@ -1,67 +1,65 @@
 import { Brand } from "./Parse";
-import { isDarkMode } from "../../Utils/Utils";
 import './brand.css';
 
-const createImageElement = ({
-  renderImage,
-  imgSrc,
-  imgSrcDark,
-  altText,
-  brandImageOnly,
-}: Brand): string => {
-  if (!renderImage) {
-    return '';
-  }
+type ImageData = Extract<Brand['data'], { image: unknown }>['image'];
 
-  let imageSrc = imgSrc;
-  if (isDarkMode() && imgSrcDark !== null && imgSrcDark !== undefined) {
-    imageSrc = imgSrcDark;
-  }
-
-  // If the imgSrc starts with '<svg', it's inline SVG HTML
-  const isInlineSvg = imageSrc.startsWith('<svg');
-  const brandImageClass = brandImageOnly ? ' brand-image-only' : '';
+const renderImage = (image: ImageData, imageOnly: boolean): string => {
+  const cls = `feds-brand-image${imageOnly ? ' brand-image-only' : ''}`;
   
-  if (isInlineSvg) {
-    const className = `feds-brand-image${brandImageClass}`;
-    return `<span class="${className}">${imageSrc}</span>`;
+  if (image.type === 'inline-svg') {
+    return `<span class="${cls}">${image.svgContent}</span>`;
   }
 
-  // Regular image element
-  const altAttr = altText.length > 0 ? ` alt="${altText}"` : '';
-  const className = `feds-brand-image${brandImageClass}`;
-  return `<span class="${className}"><img src="${imageSrc}"${altAttr} /></span>`;
+  const alt = image.alt ? ` alt="${image.alt}"` : '';
+  return `<span class="${cls}"><img src="${image.src}"${alt} /></span>`;
 };
 
-const createLabelElement = ({
-  renderLabel,
-  label,
-}: Brand): string => {
-  if (!renderLabel || label.length === 0) return '';
-
-  return `<span class="feds-brand-label">${label}</span>`;
-};
-
-/**
- * Renders the brand component as HTML
- */
-export const brand = (brandData: Brand): HTML => {
-  const { href, renderImage, renderLabel, altText } = brandData;
-
-  if (!renderImage && !renderLabel) return '';
-
-  const imageElement = createImageElement(brandData);
-  const labelElement = createLabelElement(brandData);
-
-  // If only image is rendered and we have alt text, 
-  // add aria-label for accessibility
-  const ariaLabel = !renderLabel && altText.length > 0 ? ` aria-label="${altText}"` : '';
-
-  return `
-   <div class="feds-brand-container">
+const renderBrand = (href: string, content: string, ariaLabel = ''): HTML =>
+  `<div class="feds-brand-container">
     <a href="${href}" class="feds-brand" daa-ll="Brand"${ariaLabel}>
-        ${imageElement}
-        ${labelElement}
-      </a>
-    </div>`.trim();
+      ${content}
+    </a>
+  </div>`.trim();
+
+export const brand = (brandData: Brand): HTML => {
+  const { data } = brandData;
+  switch (data.type) {
+    case 'LabelledBrand':
+      return renderBrand(
+        data.href,
+        renderImage(data.image, false) +
+        `<span class="feds-brand-label">${data.label}</span>`
+      );
+
+    case 'BrandImageOnly': {
+      const aria = data.alt ? ` aria-label="${data.alt}"` : '';
+      return renderBrand(
+        data.href,
+        renderImage(data.image, true),
+        aria
+      );
+    }
+
+    case 'ImageOnlyBrand': {
+      const aria = data.alt ? ` aria-label="${data.alt}"` : '';
+      return renderBrand(
+        data.href,
+        renderImage(data.image, false),
+        aria
+      );
+    }
+
+    case 'BrandLabelOnly':
+      return renderBrand(
+        data.href,
+        `<span class="feds-brand-label">${data.label}</span>`
+      );
+
+    case 'NoRender':
+      return '';
+
+    default:
+      data satisfies never;
+      return '';
+  }
 };
