@@ -105,7 +105,8 @@ export const parseBrand = (
       .map((img) => img?.src)
       .filter((src) => src?.length > 0);
   
-    const [imgSrc = '', imgSrcDark = null] = imageLinks.map(extractImageSource);
+    const [imgSrc = null, imgSrcDark = null] = 
+      imageLinks.map(extractImageSource);
     const altText = imageLinks[0] instanceof Element
                   ? extractAltText(imageLinks[0])
                   : primaryLink.textContent?.trim() ?? '';
