@@ -81,7 +81,18 @@ mountpoint: HTMLElement
     .map(com => com.tabs);
   const _errors_ = await Promise.all(mmPromises.map(async (mmPromise, idx) => {
     const [parsedTabs, errors] = await mmPromise;
-    const renderedTabs = tabs(parsedTabs);
+    const brand = mountpoint.querySelector('.feds-brand-container')?.outerHTML ?? '';
+    const title = megaMenus[idx].parentElement?.previousElementSibling?.textContent ?? '';
+    const breadcrumbs = mountpoint.querySelector('.breadcrumbs')?.outerHTML ?? '';
+    const fedsPopupId = megaMenus[idx].querySelector('.feds-popup')?.id ?? '';
+    const isLocalNav = megaMenus.length === 1;
+    const renderedTabs = tabs(
+      brand,
+      title,
+      breadcrumbs,
+      fedsPopupId,
+      isLocalNav
+    )(parsedTabs);
     megaMenus[idx].innerHTML = renderedTabs;
     return errors;
   }).flat());

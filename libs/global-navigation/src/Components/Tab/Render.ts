@@ -5,8 +5,21 @@ import { primaryCTA, secondaryCTA } from "../CTA/Render";
 import { renderListItems } from "../../Utils/Utils";
 
 export const tabs = (
+  brand: HTML,
+  title: string,
+  breadcrumbs: HTML,
+  fedsPopupId: string,
+  isLocalNav: boolean
+) => (
   ts: List<Tab>,
 ): HTML => `
+  <div class="top-bar">
+    ${isLocalNav ? brand : '' /* TODO placeholders */}
+  </div>
+  <div class="title">
+    ${breadcrumbs || '<div class="breadcrumbs"></div>'}
+    <h2 id="${fedsPopupId}-title">${title}</h2>
+  </div>
   <div class="tabs" role="tablist">
     ${ts.map((t, i) => `
       <button
