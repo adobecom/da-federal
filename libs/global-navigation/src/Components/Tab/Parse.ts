@@ -4,6 +4,80 @@ import { parsePrimaryCTA, parseSecondaryCTA, PrimaryCTA, SecondaryCTA } from "..
 import { Link, parseLink } from "../Link/Parse";
 import { LinkGroup, parseLinkGroup } from "../LinkGroup/Parse";
 
+export type Tab = {
+  type: "Tab";
+  title: string | null;
+  CTA: PrimaryCTA | undefined;
+  columns: List<List<ColumnItem>> | MenuPromo;
+};
+
+// We have to return a list of Tabs here because
+// SingleColumnSectionList is essentially a list
+// of tabs. A tab is essentially a Column Section
+// from the old paradigm
+export const parseTab = (
+  el: Element
+): Parsed<List<Tab>, RecoverableError> => {
+  const [parsedColumn, errors] = parseColumn(el);
+  return ((): Parsed<Tab[], RecoverableError> => {
+    switch (parsedColumn.type) {
+      case "SingleColumnSection":
+        return [
+          [{
+            type: "Tab",
+            title: parsedColumn.title,
+            columns: [parsedColumn.items],
+            CTA: getTabCTA(parsedColumn),
+          }],
+          errors
+        ];
+      case "SingleColumnSectionList":
+        return [
+          parsedColumn.sections.flatMap(section => ({
+            type: "Tab",
+            title: section.title,
+            columns: [section.items],
+            CTA: getTabCTA(section),
+          })),
+          errors
+        ]
+      case "MultiColumnSection":
+        return [
+          [{
+            type: "Tab",
+            title: parsedColumn.title,
+            columns: parsedColumn.columns,
+            CTA: getTabCTA(parsedColumn)
+          }],
+          errors
+        ];
+      case "MenuPromo":
+        return [
+          [{
+            type: "Tab",
+            title: "More", // TODO: Implement Placeholders
+            columns: parsedColumn,
+            CTA: undefined
+          }],
+          errors
+        ];
+      default: parsedColumn satisfies never; return [[], []];
+    }
+  })();
+};
+
+const getTabCTA = (
+  section: SingleColumnSection | MultiColumnSection
+): PrimaryCTA | undefined => {
+  if (section.type === 'SingleColumnSection') {
+    return section.items
+      .find(item => item.type === 'PrimaryCTA');
+  }
+  return section.columns
+    .flat()
+    .find(item => item.type === 'PrimaryCTA');
+}
+
 export type Column
   = SingleColumnSection
   | SingleColumnSectionList
@@ -13,7 +87,7 @@ export type Column
 type ColumnParser = (_: Element)
   => Parsed<Column, RecoverableError>;
 
-export const parseColumn = (
+const parseColumn = (
   el: Element
 ): Parsed<Column, RecoverableError> =>
   alternative(parseSingleColumnSectionList as ColumnParser)
@@ -58,6 +132,10 @@ export type SingleColumnSection = {
 const parseSingleColumnSection = (
   element: Element
 ): Parsed<SingleColumnSection, RecoverableError> => {
+
+  if (element.querySelector('.gnav-promo')) 
+    throw new Error('This is a promo');
+
   if (element.querySelector('.column-break'))
     throw new IrrecoverableError("Has a column break");
 

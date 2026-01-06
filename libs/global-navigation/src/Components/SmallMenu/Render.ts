@@ -1,6 +1,6 @@
 import { renderListItems, sanitize } from "../../Utils/Utils";
-import { SingleColumnSectionList } from "../Column/Parse";
-import { column, menuPromo } from "../Column/Render";
+import { SingleColumnSectionList } from "../Tab/Parse";
+import { columnItem, menuPromo } from "../Tab/Render";
 import { Link } from "../Link/Parse";
 import { link } from "../Link/Render";
 import { SmallMenu } from "./Parse";
@@ -37,3 +37,19 @@ const smallMenuList = (
   </ul>
   `;
 }
+
+const column = (
+  c: SingleColumnSectionList
+): HTML => `
+  <ul>
+    ${renderListItems(c.sections, (section): string => `
+      <ul>
+        ${section.title === null
+          ? ''
+          : `<span class="column-section-title">${section.title}</span>`
+        }
+        ${renderListItems(section.items, columnItem)}
+      </ul>
+    `.trim())}
+  </ul>
+`.trim();

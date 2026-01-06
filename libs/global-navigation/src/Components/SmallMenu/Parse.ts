@@ -1,6 +1,6 @@
 import { IrrecoverableError, RecoverableError } from "../../Error/Error";
 import { alternative, getNextSiblings, parseListAndAccumulateErrors } from "../../Utils/Utils";
-import { MenuPromo, parseMenuPromo, parseSingleColumnSectionList, SingleColumnSectionList } from "../Column/Parse";
+import { MenuPromo, parseMenuPromo, parseSingleColumnSectionList, SingleColumnSectionList } from "../Tab/Parse";
 import { Link, parseLink } from "../Link/Parse";
 
 export type SmallMenu = {

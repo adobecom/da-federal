@@ -1,13 +1,14 @@
 import { IrrecoverableError, RecoverableError } from "../../Error/Error";
 import { fetchAndProcessPlainHTML, inlineNestedFragments, parseListAndAccumulateErrors } from "../../Utils/Utils";
-import { Column, parseColumn } from "../Column/Parse";
+import { parseTab } from "../Tab/Parse";
 import { Link, parseLink } from "../Link/Parse";
+import { Tab } from "../Tab/Parse";
 
 
 export type MegaMenu = {
   type: "MegaMenu";
   title: string;
-  columns: Promise<Parsed<List<Column>, RecoverableError>>;
+  tabs: Promise<Parsed<List<Tab>, RecoverableError>>;
   crossCloudMenu: List<Link>;
   isSection: boolean;
 };
@@ -24,8 +25,8 @@ export const parseMegaMenu = (
   if (title === "")
     errors.add(new RecoverableError(ERRORS.noTitle))
 
-  const columns = (async (): 
-                   Promise<Parsed<List<Column>, RecoverableError>> => {
+  const tabs = (async (): 
+                   Promise<Parsed<List<Tab>, RecoverableError>> => {
     try {
       const fragment: HTMLAnchorElement | null = element.querySelector('h2 > a');
       const fragmentURL = new URL(fragment?.href ?? "");
@@ -36,15 +37,15 @@ export const parseMegaMenu = (
       const megaMenuFragment = await inlineNestedFragments(initialFragment);
       if (megaMenuFragment instanceof IrrecoverableError)
         throw new Error(megaMenuFragment.message);
-      const unparsedColumns = [...megaMenuFragment.children]
-        .map(c => c.firstElementChild ?? c);
-      unparsedColumns.forEach(c => console.log(c.outerHTML));
-      return parseListAndAccumulateErrors(
-        unparsedColumns,
-        parseColumn
+      const unparsedTabs = [...megaMenuFragment.children]
+      const [tabs, errors] = parseListAndAccumulateErrors(
+        unparsedTabs,
+        parseTab,
       );
+      return [tabs.flat(), errors];
     } catch (e) {
-        throw new IrrecoverableError(JSON.stringify(e));
+        // @ts-expect-error errors usually have a message
+        throw new IrrecoverableError(e?.message);
     }
   })();
   const unparsedCrossCloud = element.querySelectorAll(
@@ -61,7 +62,7 @@ export const parseMegaMenu = (
     {
       type: "MegaMenu",
       title,
-      columns,
+      tabs,
       crossCloudMenu,
       isSection
     },
