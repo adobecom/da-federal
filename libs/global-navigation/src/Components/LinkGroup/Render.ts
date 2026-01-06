@@ -1,5 +1,8 @@
 import { LinkGroup, LinkGroupBlue, LinkGroupHeader, LinkGroupLink } from "./Parse";
 
+// css
+import "./linkGroup.css";
+
 export const linkGroup = (lg: LinkGroup): HTML => {
   switch (lg.type) {
     case "LinkGroupHeader": return linkGroupHeader(lg);
@@ -16,11 +19,16 @@ export const linkGroup = (lg: LinkGroup): HTML => {
 const linkGroupHeader = ({
   title,
   classes
-}: LinkGroupHeader): HTML => `
-  <div role="heading" class="${classes.join(',')}">
-    <div class="title">${title}</div>
-  </div>
-`;
+}: LinkGroupHeader): HTML => {
+  const classNames = classes.slice(1).map(cls => `feds-link-group--${cls}`).join(' ');
+  return `
+    <div role="heading" class="feds-link-group ${classNames}">
+      <div class="feds-link-group__content">
+        <div class="feds-link-group__title">${title}</div>
+      </div>
+    </div>
+  `;
+};
 
 const linkGroupLink = ({
   iconHref,
@@ -33,20 +41,21 @@ const linkGroupLink = ({
   const icon = !hasIcon
     ? ""
     : `
-      <picture>
+      <picture class="feds-link-group__icon">
         <img
           loading="lazy"
           src="${iconHref}"
           alt="${iconAlt}"
+          class="feds-link-group__icon-img"
         >
       </picture>
     `;
   return `
-    <a class="link-group" href="${href}">
+    <a class="feds-link-group" href="${href}" daa-ll="${title}">
       ${icon}
-      <div class="content">
-        <div class="title">${title}</div>
-        <div class="subtile">${subtitle}</div>
+      <div class="feds-link-group__content">
+        <div class="feds-link-group__title">${title}</div>
+        <div class="feds-link-group__subtitle">${subtitle}</div>
       </div>
     </a>
   `
@@ -55,8 +64,9 @@ const linkGroupLink = ({
 const linkGroupBlue = ({
   link
 }: LinkGroupBlue): HTML => `
-  <a href="${link.href}" class="link-group blue">
-    ${link.text}
+  <a href="${link.href}" class="feds-link-group feds-link-group--blue" daa-ll="${link.text}">
+    <div class="feds-link-group__content">
+        <div class="feds-link-group__title">${link.text}</div>
+      </div>
   </a>
 `;
-

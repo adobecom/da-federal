@@ -128,7 +128,7 @@ const parseLinkGroupHeader = (
   if(!classes.includes('header'))
     throw new IrrecoverableError(ERRORS.notAHeader);
 
-  const title = element.querySelector('h5')?.textContent ?? "";
+  const title = element.querySelector('a')?.textContent ?? "";
   if(title === "")
     throw new IrrecoverableError(ERRORS.noTitle);
 

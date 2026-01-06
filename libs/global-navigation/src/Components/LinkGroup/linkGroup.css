@@ -1,0 +1,107 @@
+/**
+ * Link Group Styles
+ */
+.feds-link-group {
+    --title-color: #2f2f2f;
+    --sub-title-color: #4b4b4b;
+    --bg-hover-color: #e9e9e9;
+    --accent-color: #274dea;
+    --accent-color-hover: #1d3ecf;
+    --header-border-color: #b6b6b6;
+    --header-background-color: #eaeaea;
+    align-items: flex-start;
+    display: flex;
+    flex-direction: column;
+    padding: 12px;
+}
+
+.feds-link-group:hover {
+    background-color: var(--bg-hover-color);
+}
+
+.feds-link-group__title {
+    /* font-family: var(--heading-font-family); */
+    font-size: 0.875rem;
+    font-weight: 700;
+    line-height: 1rem;
+    color: var(--title-color);
+}
+
+.feds-link-group__subtitle {
+    font-size: 0.75rem;
+    line-height: 1rem;
+    color: var(--sub-title-color);
+}
+
+.feds-link-group--blue,
+.feds-link-group--blue .feds-link-group__title {
+    color: var(--accent-color);
+}
+
+.feds-link-group--blue:hover,
+.feds-link-group--blue:hover .feds-link-group__title {
+    color: var(--accent-color-hover);
+}
+
+/* styles overriden coming from styles.css */
+.feds-link-group.feds-link-group--blue {
+    text-decoration: underline;
+}
+
+.feds-link-group.feds-link-group--gray-gradient {
+    background-color: var(--header-background-color);
+}
+
+@media (min-width: 900px) {
+    .feds-link-group {
+        --title-color: #9f9f9f;
+        --sub-title-color: #9f9f9f;
+        --title-color-hover: #fff;
+        --sub-title-color-hover: #fff;
+        --bg-hover-color: transparent;
+        --header-background-color: transparent;
+        padding: 0;
+    }
+
+    .feds-link-group--blue,
+    .feds-link-group--blue:hover {
+        color: var(--title-color-hover);
+    }
+
+    .feds-link-group__content {
+        padding: 24px 0;
+    }
+
+    .feds-link-group__title {
+        font-size: 1.25rem;
+        line-height: 115%;
+        padding-bottom: 10px;
+    }
+
+    .feds-link-group:hover .feds-link-group__title {
+        color: var(--title-color-hover);
+    }
+
+    .feds-link-group__subtitle {
+        font-size: 0.875rem;
+        line-height: 140%;
+    }
+
+    .feds-link-group:hover .feds-link-group__subtitle {
+        color: var(--sub-title-color-hover);
+    }
+
+    .feds-link-group--blue .feds-link-group__title,
+    .feds-link-group.feds-link-group--gray-gradient .feds-link-group__title{
+        color: var(--title-color-hover);
+    }
+
+    .feds-link-group.feds-link-group--header .feds-link-group__title {
+        color: var(--title-color);
+        border-bottom: 1px solid var(--header-border-color);
+    }
+
+    .feds-link-group.feds-link-group--header .feds-link-group__content {
+        width: 100%;
+    }
+}
