@@ -1,5 +1,7 @@
 import esbuild from 'esbuild';
 
+const isWatch = process.argv.includes('--watch');
+
 // Plugin to inject CSS into JS
 const injectCSSPlugin = {
   name: 'inject-css',
@@ -20,8 +22,7 @@ const injectCSSPlugin = {
   },
 };
 
-// Build test exports for testing
-await esbuild.build({
+const buildOptions = {
   entryPoints: ['src/test-exports.ts'],
   bundle: true,
   outfile: 'dist/test-exports.js',
@@ -31,5 +32,14 @@ await esbuild.build({
   sourcemap: true,
   logLevel: 'info',
   plugins: [injectCSSPlugin],
-});
-console.log('Build complete - test-exports.js created');
+};
+
+if (isWatch) {
+  const context = await esbuild.context(buildOptions);
+  await context.watch();
+  console.log('Watching test-exports.js for changes...');
+} else {
+  // Build test exports for testing
+  await esbuild.build(buildOptions);
+  console.log('Build complete - test-exports.js created');
+}
