@@ -57,4 +57,18 @@ if (isWatch) {
   
   await esbuild.build(buildOptions);
   console.log('Build complete - CSS inlined into main.js');
+  
+  // Build test exports for testing
+  await esbuild.build({
+    entryPoints: ['src/test-exports.ts'],
+    bundle: true,
+    outfile: 'dist/test-exports.js',
+    format: 'esm',
+    platform: 'browser',
+    target: ['es2020'],
+    sourcemap: true,
+    logLevel: 'info',
+    plugins: [injectCSSPlugin],
+  });
+  console.log('Build complete - test-exports.js created');
 }
