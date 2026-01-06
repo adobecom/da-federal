@@ -1,7 +1,7 @@
 import { LinkGroup, LinkGroupBlue, LinkGroupHeader, LinkGroupLink } from "./Parse";
 
 // css
-import "./Render.css";
+import "./linkGroup.css";
 
 export const linkGroup = (lg: LinkGroup): HTML => {
   switch (lg.type) {
@@ -19,11 +19,16 @@ export const linkGroup = (lg: LinkGroup): HTML => {
 const linkGroupHeader = ({
   title,
   classes
-}: LinkGroupHeader): HTML => `
-  <div role="heading" class="${classes.join(',')}">
-    <div class="title">${title}</div>
-  </div>
-`;
+}: LinkGroupHeader): HTML => {
+  const classNames = classes.slice(1).map(cls => `feds-link-group--${cls}`).join(' ');
+  return `
+    <div role="heading" class="feds-link-group ${classNames}">
+      <div class="feds-link-group__content">
+        <div class="feds-link-group__title">${title}</div>
+      </div>
+    </div>
+  `;
+};
 
 const linkGroupLink = ({
   iconHref,
@@ -59,7 +64,9 @@ const linkGroupLink = ({
 const linkGroupBlue = ({
   link
 }: LinkGroupBlue): HTML => `
-  <a href="${link.href}" class="link-group blue">
-    ${link.text}
+  <a href="${link.href}" class="feds-link-group feds-link-group--blue" daa-ll="${link.text}">
+    <div class="feds-link-group__content">
+        <div class="feds-link-group__title">${link.text}</div>
+      </div>
   </a>
 `;
