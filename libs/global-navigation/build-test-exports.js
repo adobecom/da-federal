@@ -1,7 +1,4 @@
 import esbuild from 'esbuild';
-import { execSync } from 'child_process';
-
-const isWatch = process.argv.includes('--watch');
 
 // Plugin to inject CSS into JS
 const injectCSSPlugin = {
@@ -23,38 +20,16 @@ const injectCSSPlugin = {
   },
 };
 
-const buildOptions = {
-  entryPoints: ['src/Main.ts'],
+// Build test exports for testing
+await esbuild.build({
+  entryPoints: ['src/test-exports.ts'],
   bundle: true,
-  outfile: 'dist/main.js',
+  outfile: 'dist/test-exports.js',
   format: 'esm',
   platform: 'browser',
   target: ['es2020'],
-  minify: true,
   sourcemap: true,
   logLevel: 'info',
   plugins: [injectCSSPlugin],
-};
-
-if (isWatch) {
-  const context = await esbuild.context({
-    ...buildOptions,
-    plugins: [
-      {
-        name: 'type-check',
-        setup(build) {
-          build.onStart(() => {
-            execSync('tsc --noEmit', { stdio: 'inherit' });
-          });
-        },
-      },
-    injectCSSPlugin,
-    ],
-  });
-  await context.watch();
-} else {
-  execSync('tsc --noEmit', { stdio: 'inherit' });
-  
-  await esbuild.build(buildOptions);
-  console.log('Build complete - CSS inlined into main.js');
-}
+});
+console.log('Build complete - test-exports.js created');

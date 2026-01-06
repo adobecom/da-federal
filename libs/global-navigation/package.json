@@ -14,6 +14,7 @@
     "clean": "rm -rf dist",
     "lint": "eslint . --ext .ts",
     "lint:fix": "eslint . --ext .ts --fix",
+    "pretest": "node build-test-exports.js",
     "test": "web-test-runner test/**/*.test.js --node-resolve",
     "test:watch": "npm test -- --watch",
     "test:coverage": "npm test -- --coverage"
