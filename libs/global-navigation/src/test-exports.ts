@@ -5,3 +5,4 @@ export { IrrecoverableError, RecoverableError } from './Error/Error';
 export { parseLink } from './Components/Link/Parse';
 export type { LinkGroup, LinkGroupHeader, LinkGroupLink, LinkGroupBlue } from './Components/LinkGroup/Parse';
 export type { Link } from './Components/Link/Parse';
+export { parseBrand } from './Components/Brand/Parse';
