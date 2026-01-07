@@ -29,6 +29,20 @@ export const split = <T>(
   return splitArrays;
 };
 
+export const zip = <T, R>(
+  xs: T[],
+  ys: R[]
+): List<[T, R]> => {
+  const len = xs.length < ys.length
+            ? xs.length
+            : ys.length;
+  const result = new Array(len) as List<[T, R]>;
+  for (let i = 0; i < len; i = i + 1) {
+    result[i] = [xs[i], ys[i]];
+  }
+  return result;
+}
+
 export const takeWhile = <T>(
   predicate: (_: T) => boolean
 ) => (arr: T[]): T[] => {
@@ -142,9 +156,10 @@ export const fetchAndProcessPlainHTML = async (
   try {
     if (source === null)
       return new IrrecoverableError('URL is null');
-    const response = await fetch(federateUrl(source.href));
+    const modifiedSource = federateUrl(`${source.origin}${source.pathname.replace(/(\.html$|$)/, '.plain.html')}${source.hash}`);
+    const response = await fetch(modifiedSource);
     if (!response.ok)
-      return new IrrecoverableError(`Request for ${source} failed`);
+      return new IrrecoverableError(`Request for ${modifiedSource} failed`);
     const htmlText = await response.text();
   
     const { body } = new DOMParser().parseFromString(htmlText, "text/html");
@@ -155,13 +170,56 @@ export const fetchAndProcessPlainHTML = async (
   }
 };
 
-const federateUrl = (path: string): string => {
-  // Prevent double .plain.html by first removing
-  // any existing .plain.html, then adding it
-  const cleanedPath = path.replace(/\.plain\.html(?=[?#]|$)/, '.html');
-  // Handles .html, .html#hash, .html?query, or no extension
-  return cleanedPath.replace(/\.html(?=[?#]|$)|(?=[?#]|$)/, '.plain.html');
-}
+// TODO: refactor
+let federatedContentRoot: string;
+export const getFederatedContentRoot = (): string => {
+  if (federatedContentRoot) return federatedContentRoot;
+
+  const cdnWhitelistedOrigins = [
+    'https://www.adobe.com',
+    'https://business.adobe.com',
+    'https://blog.adobe.com',
+    'https://milo.adobe.com',
+    'https://news.adobe.com',
+    'graybox.adobe.com',
+  ];
+  if (federatedContentRoot) return federatedContentRoot;
+  // Non milo consumers will have its origin from config
+  // TODO: allow the passing of a configured origin
+  const origin = window.location.origin;
+
+  const isAllowedOrigin = cdnWhitelistedOrigins.some((o) => {
+    const originNoStage = origin.replace('.stage', '');
+    return o.startsWith('https://')
+      ? originNoStage === o
+      : originNoStage.endsWith(o);
+  });
+
+  federatedContentRoot = isAllowedOrigin ? origin : 'https://www.adobe.com';
+
+  const SLD = window.location.hostname.includes('.aem.') ? 'aem' : 'hlx';
+  if (origin.includes('localhost') || origin.includes(`.${SLD}.`)) {
+    federatedContentRoot = `https://main--federal--adobecom.aem.${origin.endsWith('.live') ? 'live' : 'page'}`;
+  }
+
+  return federatedContentRoot;
+};
+
+// TODO we should match the akamai patterns /locale/federal/
+// at the start of the url
+// and make the check more strict.
+export const federateUrl = (url = ''): string => {
+  if (typeof url !== 'string' || !url.includes('/federal/')) return url;
+  if (url.startsWith('/')) return `${getFederatedContentRoot()}${url}`;
+  try {
+    const { pathname, search, hash } = new URL(url);
+    return `${getFederatedContentRoot()}${pathname}${search}${hash}`;
+  } catch (e) {
+    // @ts-expect-error errors usually have a message
+    console.log(`getFederatedUrl errored parsing the URL: ${url}: ${e?.message}`);
+  }
+  return url;
+};
 
 export const inlineNestedFragments = async (
   element: Element | HTMLElement
@@ -189,7 +247,9 @@ export const inlineNestedFragments = async (
             await processElement(fragmentBody, visitedUrls);
             const parentDiv = anchorElement.closest('div');
             if (parentDiv) {
-              parentDiv.replaceChildren(...fragmentBody.children);
+              parentDiv.replaceWith(...fragmentBody.children);
+            } else {
+              anchorElement.replaceWith(...fragmentBody.children);
             }
             return;
           } catch {

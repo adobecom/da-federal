@@ -1,26 +1,43 @@
 import { MegaMenu } from "./Parse";
-import { renderListItems, sanitize } from "../../Utils/Utils";
-import { link } from "../Link/Render";
+import { sanitize } from "../../Utils/Utils";
 
-export const renderGhostColumns = (): HTML => `
-  <li class="ghost-column">
-    <div class="ghost-header"></div>
-    <div class="ghost-item"></div>
-    <div class="ghost-item"></div>
-    <div class="ghost-item"></div>
-  </li>
-  <li class="ghost-column">
-    <div class="ghost-header"></div>
-    <div class="ghost-item"></div>
-    <div class="ghost-item"></div>
-    <div class="ghost-item"></div>
-  </li>
-  <li class="ghost-column">
-    <div class="ghost-header"></div>
-    <div class="ghost-item"></div>
-    <div class="ghost-item"></div>
-  </li>
-`;
+export const renderGhostTabs = (title: string): HTML => {
+  const tab = () => ({ name: '', description: ''});
+  const tabs = [0, 1, 2, 3].map(tab);
+  return `
+  <div class="feds-popup loading" aria-hidden="true">
+    <div class="top-bar">
+    </div>
+    <div class="title">
+      <h2>${title}</h2>
+    </div>
+    <div class="tabs" role="tablist">
+      ${tabs.map(({ name, description }, i) => `
+        <div class="tab-wrapper">
+          <button
+          role="tab"
+          class="tab"
+          aria-selected="false"
+          aria-controls="${i}"
+          >${name.trim() === '' ? '<div></div>' : name}</button>
+          ${description ? `<div class="feds-menu-description">${description}</div>` : ''}
+        </div>
+      `).join('')}
+    </div>
+    <div class="tab-content">
+    ${tabs.map((_, i) => `
+        <div
+          id="${i}"
+          role="tabpanel"
+          aria-labelledby="${i}"
+          class="feds-navLink-content"
+        >
+      <div class="feds-navLink-title"></div>
+      <div class="feds-navLink-description"></div>
+      </div>`).join('')}
+  </div>
+  `;
+}
 
 /* 
 * We don't render columns immediately
@@ -30,7 +47,6 @@ export const renderGhostColumns = (): HTML => `
       
 export const megaMenu = ({
   title,
-  crossCloudMenu,
   isSection
 }: MegaMenu): HTML => `
   <button type="button"
@@ -42,9 +58,7 @@ export const megaMenu = ({
   </button>
   <div id="${sanitize(title)}" class="feds-popup${isSection ? '' : ' section'}">
     <ul>
-    </ul>
-    <ul class="cross-cloud-menu">
-      ${renderListItems(crossCloudMenu, link)}
+      
     </ul>
   </div>
 `

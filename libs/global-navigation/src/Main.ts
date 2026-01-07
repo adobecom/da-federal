@@ -1,7 +1,6 @@
-import { column } from "./Components/Column/Render";
 import { component } from "./Components/Component";
 import { productEntryCTA } from "./Components/CTA/Render";
-import { renderGhostColumns } from "./Components/MegaMenu/Render";
+import { renderGhostTabs} from "./Components/MegaMenu/Render";
 import { IrrecoverableError, RecoverableError } from "./Error/Error";
 import { GlobalNavigationData, parseNavigation } from "./Parse/Parse";
 import { initClickListeners } from "./PostRendering/ClickListeners";
@@ -10,6 +9,9 @@ import { UnavConfig } from "./PostRendering/Unav";
 import { getInitialHTML } from "./PreRendering/FetchAssets";
 import { renderListItems } from "./Utils/Utils";
 import './styles/styles.css';
+import { tabs } from "./Components/Tab/Render";
+
+// TODO implement Analytics
 
 type GlobalNavigation = {
   closeEverything: () => void;
@@ -54,7 +56,7 @@ export const main = async (
   
   // TODO: Implement Aside
   
-  renderGnav(gnavData)(input.mountpoint);
+  await renderGnav(gnavData)(input.mountpoint);
 
   return postRenderingTasks(input);
 };
@@ -72,15 +74,26 @@ mountpoint: HTMLElement
     ...mountpoint.querySelectorAll('.mega-menu ~ .feds-popup > ul')
   ]
   megaMenus.forEach(mm => {
-    mm.innerHTML = renderGhostColumns();
+    mm.innerHTML = renderGhostTabs(mm.textContent?.trim() ?? '');
   });
   const mmPromises = data.components
     .filter(com => com.type === "MegaMenu")
-    .map(com => com.columns);
+    .map(com => com.tabs);
   const _errors_ = await Promise.all(mmPromises.map(async (mmPromise, idx) => {
-    const [columns, errors] = await mmPromise;
-    const renderedColumns = renderListItems(columns, column);
-    megaMenus[idx].innerHTML = renderedColumns;
+    const [parsedTabs, errors] = await mmPromise;
+    const brand = mountpoint.querySelector('.feds-brand-container')?.outerHTML ?? '';
+    const title = megaMenus[idx].parentElement?.previousElementSibling?.textContent ?? '';
+    const breadcrumbs = mountpoint.querySelector('.breadcrumbs')?.outerHTML ?? '';
+    const fedsPopupId = megaMenus[idx].querySelector('.feds-popup')?.id ?? '';
+    const isLocalNav = megaMenus.length === 1;
+    const renderedTabs = tabs(
+      brand,
+      title,
+      breadcrumbs,
+      fedsPopupId,
+      isLocalNav
+    )(parsedTabs);
+    megaMenus[idx].innerHTML = renderedTabs;
     return errors;
   }).flat());
   return mountpoint;
