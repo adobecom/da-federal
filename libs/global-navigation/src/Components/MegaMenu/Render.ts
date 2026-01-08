@@ -1,8 +1,12 @@
 import { MegaMenu } from "./Parse";
 import { sanitize } from "../../Utils/Utils";
+import './megaMenu.css';
 
 export const renderGhostTabs = (title: string): HTML => {
-  const tab = () => ({ name: '', description: ''});
+  const tab = (): { name: string; description: string } => ({
+    name: '',
+    description: '',
+  });
   const tabs = [0, 1, 2, 3].map(tab);
   return `
   <div class="feds-popup loading" aria-hidden="true">
@@ -52,13 +56,13 @@ export const megaMenu = ({
   <button type="button"
           aria-expanded="false"
           aria-controls="${sanitize(title)}"
-          class="mega-menu"
+          class="mega-menu feds-link"
+          popovertarget="${sanitize(title)}"
   >
     ${title}
   </button>
-  <div id="${sanitize(title)}" class="feds-popup${isSection ? '' : ' section'}">
+  <div id="${sanitize(title)}" popover class="feds-popup${isSection ? '' : ' section'}" aria-hidden="true">
     <ul>
-      
     </ul>
   </div>
 `
