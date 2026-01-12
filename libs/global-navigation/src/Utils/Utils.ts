@@ -147,6 +147,13 @@ export const setupMobileDesktopListeners = ({
       = isDesktop.matches
       ? desktopEventListeners(gnav)
       : mobileEventListeners(gnav);
+    // To close the sidebar when it goes back to desktop view
+    const menuPopover = gnav.querySelector<
+      HTMLElement & { hidePopover?: () => void }
+    >('#feds-menu-wrapper');
+    if (menuPopover?.matches(':popover-open') === true) {
+      menuPopover.hidePopover?.();
+    }
   });
 };
 
@@ -214,9 +221,9 @@ export const federateUrl = (url = ''): string => {
   try {
     const { pathname, search, hash } = new URL(url);
     return `${getFederatedContentRoot()}${pathname}${search}${hash}`;
-  } catch (e) {
-    // @ts-expect-error errors usually have a message
-    console.log(`getFederatedUrl errored parsing the URL: ${url}: ${e?.message}`);
+  } catch (e: unknown) {
+    const message = e instanceof Error ? e.message : String(e);
+    console.warn(`getFederatedUrl errored parsing the URL: ${url}: ${message}`);
   }
   return url;
 };
