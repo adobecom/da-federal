@@ -4,7 +4,7 @@
  */
 
 import { RecoverableError } from '../../Error/Error';
-import { loadScript, loadStyles, isDesktop, getMiloConfig, MiloConfig } from '../../Utils/Utils';
+import { loadScript, loadStyles, isDesktop, getMiloConfig, getMiloLocaleSettings, MiloConfig } from '../../Utils/Utils';
 import type {
   UnavConfig,
   UnavChildren,
@@ -207,7 +207,7 @@ export const loadUnav = async (
       target: utilitiesContainer,
       env: environment,
       locale,
-      countryCode: 'US', // TODO: Dynamically determine country code (getMiloLocaleSettings(getConfig().locale)?.country)
+      countryCode: getMiloLocaleSettings(config?.locale)?.country || 'US',
       imsClientId: (window as WindowWithAdobeId)?.adobeid?.client_id,
       theme: 'light', // TODO: Add toggle based on site theme
       analyticsContext: {

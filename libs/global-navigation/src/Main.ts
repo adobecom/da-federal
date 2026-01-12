@@ -42,7 +42,6 @@ export const main = async (
   input: Input
 ): Promise<GlobalNavigation | IrrecoverableError> => {
   const { gnavSource, mountpoint, unavEnabled, miloConfig } = input;
-  console.log(miloConfig);
   if (!(gnavSource instanceof URL)) {
     throw new IrrecoverableError("gnavSource needs to be a URL object");
   }
