@@ -1,31 +1,14 @@
 /**
  * Type definitions for Universal Navigation (UNAV) implementation
- * Consolidates all UNAV-related types, interfaces, and window augmentations
+ * Consolidates all UNAV-related types and interfaces
+ * 
+ * NOTE: Window augmentations moved to src/types/adobe-window.d.ts
+ * for cross-module access (theme switching, analytics, etc.)
  */
 
 // ============================================================================
-// Window Augmentations
+// Window Type Helpers
 // ============================================================================
-
-declare global {
-  interface Window {
-    adobeProfile?: {
-      getUserProfile: () => Promise<unknown>;
-    };
-    adobeIMS?: {
-      signIn: (context: object) => void;
-      isSignedInUser: () => boolean;
-    };
-    adobeid?: {
-      client_id?: string;
-    };
-    alloy?: (command: string) => Promise<AlloyIdentityData>;
-    UniversalNav?: {
-      (config: UnavConfig): Promise<void>;
-      reload: (config: UnavConfig) => void;
-    };
-  }
-}
 
 export type WindowWithAdobeId = Window & {
   adobeid: {
