@@ -3,15 +3,81 @@
  * Styles for the federal global navigation component
  */
 
-/* ========================================
-   Header Container
-   ======================================== */
+:root {
+    --feds-heading-font: 'Adobe Clean Display', adobe-clean-display, adobe-clean, 'Trebuchet MS', sans-serif;
+    --feds-link-color: #4B4B4B;
+    --feds-nav-height: 64px;
+}
 
 header.global-navigation.site-pivot {
-    display: block;
     visibility: visible;
+    display: block;
+}
+
+.global-navigation nav ul {
+    display: flex;
+    width: 100%;
+    max-width: var(--feds-maxWidth-nav);
+    height: inherit;
+    align-items: center;
+}
+
+
+.feds-link {
+    font-size: 16px;
+    font-weight: 800;
+    color: #4B4B4B;
+    font-family: var(--feds-heading-font);
+    display: flex;
+    align-items: center;
+    border: 0;
+    background-color: transparent;
+    padding: 12px;
+    color: var(--feds-link-color);
+}
+
+header.global-navigation.site-pivot nav {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    max-width: var(--feds-maxWidth-nav);
+    height: var(--feds-height-nav);
+    padding-left: 10%;
+    justify-content: flex-start;
+}
+
+.global-navigation nav ul {
+    display: flex;
+    width: 100%;
+    max-width: var(--feds-maxWidth-nav);
+    height: inherit;
+    align-items: center;
+    padding-left: 0;
+}
+
+.feds-link {
+    font-size: 16px;
+    font-weight: 800;
+    color: #4B4B4B;
+    font-family: var(--feds-heading-font);
+    display: flex;
+    align-items: center;
+    border: 0;
+    background-color: transparent;
+    padding: 12px;
+    color: var(--feds-link-color);
+    cursor: pointer;
+}
+
+header.global-navigation.site-pivot:has(.feds-popup:popover-open) {
+    background-color: #000;
+}
+
+header.global-navigation.site-pivot:has(.feds-popup:popover-open) .feds-link {
+    color: #fff;
 }
 
 header.global-navigation.site-pivot ul {
     list-style: none;
+    margin: 0;
 }

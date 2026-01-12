@@ -1,0 +1,45 @@
+.mega-menu::after {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-left: 8px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg) translateY(-1px);
+  transform-origin: center;
+  transition: transform 150ms ease;
+  pointer-events: none;
+}
+
+.mega-menu:has(+ .feds-popup:popover-open)::after {
+  transform: rotate(-135deg) translateY(1px);
+  margin-top: 8px;
+}
+
+.feds-popup {
+  display: none;
+}
+
+.feds-popup:popover-open {
+    display: flex;
+    flex-direction: row;
+    justify-content: start;
+    translate: 0;
+    opacity: 1;
+    z-index: 2;
+    transition: translate 0.4s ease-out, opacity 0.2s ease, visibility 0s linear 0s;
+    visibility: visible;
+    background-color: #000;
+    align-items: start;
+    margin-top: 1px;
+    padding: 12px 0;
+    padding-left: 15%;
+    width: 100%;
+    height: calc(100vh - 64px);
+    position: absolute;
+    left: 0;
+    box-shadow: 0 3px 3px 0 rgb(0 0 0 / 20%);
+    transform: translate3d(0, 0, 0);
+    top: var(--feds-nav-height);
+}
