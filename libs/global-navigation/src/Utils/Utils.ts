@@ -291,3 +291,333 @@ export const isDarkMode = (): boolean => {
   // TODO: Implement dark mode detection
   return true;
 };
+
+/**
+ * Configuration options for dynamically loading link elements
+ */
+type LoadLinkOptions = {
+  id?: string;
+  as?: string;
+  callback?: (type: string) => void;
+  crossorigin?: string;
+  rel: string;
+  fetchpriority?: string;
+}
+
+/**
+ * Dynamically loads a link element into the document head.
+ * Prevents duplicate loading by checking if a link with the same href already exists.
+ * 
+ * @param href - URL of the resource to load
+ * @param options - Configuration options for the link element
+ * @returns The created or existing HTMLLinkElement
+ * 
+ * @example
+ * // Load a stylesheet with high priority
+ * loadLink('/styles/main.css', { 
+ *   rel: 'stylesheet', 
+ *   fetchpriority: 'high',
+ *   callback: (type) => console.log(`Stylesheet ${type}`)
+ * });
+ */
+export function loadLink(
+  href: string,
+  {
+    id,
+    as,
+    callback,
+    crossorigin,
+    rel,
+    fetchpriority,
+  }: LoadLinkOptions = { rel: 'stylesheet' }
+): HTMLLinkElement {
+  // Check if link already exists to prevent duplicates
+  let link = document.head.querySelector(`link[href="${href}"]`) as HTMLLinkElement | null;
+  if (!link) {
+    // Create new link element with specified attributes
+    link = document.createElement('link');
+    link.setAttribute('rel', rel);
+    if (id) link.setAttribute('id', id);
+    if (as) link.setAttribute('as', as);
+    if (crossorigin) link.setAttribute('crossorigin', crossorigin);
+    if (fetchpriority) link.setAttribute('fetchpriority', fetchpriority);
+    link.setAttribute('href', href);
+    
+    // Attach load/error event handlers if callback provided
+    if (callback) {
+      link.onload = (e: Event) => callback(e.type);
+      link.onerror = (e: string | Event) => callback(typeof e === 'string' ? 'error' : e.type);
+    }
+    document.head.appendChild(link);
+  } else if (callback) {
+    // Link already exists, invoke callback with 'noop' to indicate no action taken
+    callback('noop');
+  }
+  return link;
+}
+
+/**
+ * Convenience function to load a CSS stylesheet.
+ * 
+ * @param href - URL of the stylesheet to load
+ * @param callback - Optional callback invoked on load/error events
+ * @returns The created or existing HTMLLinkElement
+ */
+export function loadStyle(href: string, callback?: (type: string) => void): HTMLLinkElement {
+  return loadLink(href, { rel: 'stylesheet', callback });
+}
+
+/**
+ * Conditionally loads a stylesheet based on the override flag.
+ * 
+ * @param url - URL of the stylesheet to load
+ * @param override - Whether to load the stylesheet (defaults to false)
+ */
+export function loadStyles(url: string, override = false) {
+  if (!override) return;
+  loadStyle(url);
+}
+
+/**
+ * Configuration options for dynamically loading script elements
+ */
+type LoadScriptOptions = {
+  /** Loading strategy: 'async' for parallel execution, 'defer' for sequential after DOM parsing */
+  mode?: 'async' | 'defer';
+  /** Unique identifier for the script element */
+  id?: string;
+};
+
+/**
+ * Dynamically loads a JavaScript file into the document head.
+ * Returns a Promise that resolves when the script loads successfully or rejects on error.
+ * Prevents duplicate loading and tracks loaded state via data-loaded attribute.
+ * 
+ * @param url - URL of the script to load
+ * @param type - Script MIME type (e.g., 'module', 'text/javascript')
+ * @param options - Configuration options for loading behavior
+ * @returns Promise that resolves with the HTMLScriptElement on success
+ * 
+ * @example
+ * // Load a module script asynchronously
+ * loadScript('/js/app.js', 'module', { mode: 'async' })
+ *   .then(script => console.log('Script loaded'))
+ *   .catch(error => console.error('Failed to load:', error));
+ */
+export const loadScript = (
+  url: string,
+  type?: string,
+  { mode, id }: LoadScriptOptions = {}
+): Promise<HTMLScriptElement> => new Promise((resolve, reject) => {
+  // Check if script already exists to prevent duplicates
+  let script = document.querySelector(`head > script[src="${url}"]`) as HTMLScriptElement | null;
+  if (!script) {
+    // Create new script element with specified attributes
+    const { head } = document;
+    script = document.createElement('script');
+    script.setAttribute('src', url);
+    if (id) script.setAttribute('id', id);
+    if (type) {
+      script.setAttribute('type', type);
+    }
+    // Set loading mode (async or defer) if specified
+    if (mode && ['async', 'defer'].includes(mode)) script.setAttribute(mode, '');
+    head.append(script);
+  }
+
+  // If script was previously loaded, resolve immediately
+  if ((script as HTMLScriptElement).dataset.loaded) {
+    resolve(script as HTMLScriptElement);
+    return;
+  }
+
+  // Set up event handler for load and error events
+  const onScript = (event: Event) => {
+    (script as HTMLScriptElement).removeEventListener('load', onScript);
+    (script as HTMLScriptElement).removeEventListener('error', onScript);
+
+    if (event.type === 'error') {
+      reject(new Error(`error loading script: ${(script as HTMLScriptElement).src}`));
+    } else if (event.type === 'load') {
+      // Mark script as loaded to prevent re-execution
+      (script as HTMLScriptElement).dataset.loaded = 'true';
+      resolve(script as HTMLScriptElement);
+    }
+  };
+
+  script.addEventListener('load', onScript);
+  script.addEventListener('error', onScript);
+});
+
+/**
+ * Retrieves metadata content from the document's head section.
+ * Automatically determines whether to use 'name' or 'property' attribute based on the metadata name.
+ * 
+ * Uses 'property' attribute for Open Graph and other namespaced metadata (containing ':'),
+ * and 'name' attribute for standard HTML metadata.
+ * 
+ * @param name - The metadata name or property to search for (e.g., 'description', 'og:title')
+ * @param doc - The document to search in (defaults to current document)
+ * @returns The metadata content value, or null if not found
+ * 
+ * @example
+ * // Get standard meta tag
+ * const description = getMetadata('description');
+ * 
+ * @example
+ * // Get Open Graph meta tag
+ * const ogTitle = getMetadata('og:title');
+ */
+export function getMetadata(name: string, doc: Document = document): string | null {
+  // Use 'property' for namespaced metadata (e.g., Open Graph), 'name' for standard metadata
+  const attr = name && name.includes(':') ? 'property' : 'name';
+  const meta = doc.head.querySelector(`meta[${attr}="${name}"]`) as HTMLMetaElement | null;
+  return meta && meta.content;
+}
+
+type MiloConfigEnv = {
+  name: string;                    // REQUIRED - Environment name: 'local', 'stage', or 'prod'
+  ims?: string;                    // IMS environment: 'stg1' or 'prod'
+  adobeIO?: string;                // Adobe I/O hostname
+  adminconsole?: string;           // Admin Console hostname
+  account?: string;                // Account hostname
+  edgeConfigId?: string;           // Edge configuration ID
+  pdfViewerClientId?: string;      // PDF Viewer client ID
+  consumer?: {                     // Consumer-specific configuration (optional)
+    pdfViewerClientId: string;
+    pdfViewerReportSuite: string;
+    psUrl: string;
+    odinEndpoint: string;
+  };
+};
+
+type MiloConfigLocale = {
+  prefix: string;                  // REQUIRED - e.g., '', '/fr', '/de', '/jp/ja'
+  ietf?: string;                   // e.g., 'en-US', 'fr-FR', 'de-DE'
+  tk?: string;                     // Typekit font ID, e.g., 'hah7vzn.css'
+  region?: string;                 // Region/country code, e.g., 'us', 'gb', 'fr'
+  regions?: Record<string, unknown>; // Regional configuration mapping
+  contentRoot?: string;            // Full content path with origin
+  language?: string;               // Language code (new routing), e.g., 'en', 'fr', 'de'
+  dir?: string;                    // Text direction: 'ltr' or 'rtl'
+  
+  // Allow additional locale-specific properties
+  [key: string]: unknown;          // Additional locale configuration
+};
+
+type UnavProfileConfig = {
+  messageEventListener?: (event: CustomEvent) => void;
+  complexConfig?: Record<string, any> | null;
+  config?: Record<string, any>;
+  signInCtaStyle?: 'primary' | 'secondary';
+}
+
+type UnavConfig = {
+  unavHelpChildren?: Array<{ type: string }>;
+  profile?: UnavProfileConfig;
+  uncAppId?: string;
+  uncConfig?: Record<string, any>;
+  showSectionDivider?: boolean;
+}
+
+type JarvisConfig = {
+  id: string;
+  callbacks?: Record<string, Function>;
+}
+
+export type MiloConfig = {
+  env: MiloConfigEnv;
+  locale: MiloConfigLocale;
+  unav?: UnavConfig;
+  jarvis?: JarvisConfig;
+  signInContext?: object;          // IMS sign-in context for UNAV
+};
+
+/**
+ * Validates MiloConfig structure at runtime
+ * @param config - Configuration object to validate
+ * @returns true if valid, false otherwise
+ */
+const isValidMiloConfig = (config: unknown): config is MiloConfig => {
+  if (!config || typeof config !== 'object') return false;
+  
+  const cfg = config as Record<string, unknown>;
+  
+  // Validate locale structure
+  if (!cfg.locale || typeof cfg.locale !== 'object') return false;
+  const locale = cfg.locale as Record<string, unknown>;
+  if (typeof locale.prefix !== 'string') return false;
+  
+  // Validate env structure
+  if (!cfg.env || typeof cfg.env !== 'object') return false;
+  const env = cfg.env as Record<string, unknown>;
+  if (typeof env.name !== 'string') return false;
+  
+  // Validate optional unav structure
+  if (cfg.unav !== undefined) {
+    if (typeof cfg.unav !== 'object' || cfg.unav === null) return false;
+    const unav = cfg.unav as Record<string, unknown>;
+    
+    // Validate unav.profile if present
+    if (unav.profile !== undefined) {
+      if (typeof unav.profile !== 'object' || unav.profile === null) return false;
+      const profile = unav.profile as Record<string, unknown>;
+      
+      // Validate signInCtaStyle if present
+      if (profile.signInCtaStyle !== undefined) {
+        if (profile.signInCtaStyle !== 'primary' && profile.signInCtaStyle !== 'secondary') {
+          return false;
+        }
+      }
+      
+      // Validate messageEventListener if present
+      if (profile.messageEventListener !== undefined && typeof profile.messageEventListener !== 'function') {
+        return false;
+      }
+    }
+  }
+  
+  // Validate optional jarvis structure
+  if (cfg.jarvis !== undefined) {
+    if (typeof cfg.jarvis !== 'object' || cfg.jarvis === null) return false;
+    const jarvis = cfg.jarvis as Record<string, unknown>;
+    
+    // id is required if jarvis object exists
+    if (typeof jarvis.id !== 'string') return false;
+  }
+  
+  return true;
+};
+
+/**
+ * MiloConfig Configuration State Management
+ * Implements closure-based singleton pattern for global configuration with validation
+ * 
+ * @throws Error if config validation fails or if accessed before initialization
+ */
+export const [setMiloConfig, getMiloConfig] = (() => {
+  let miloConfig: MiloConfig | undefined;
+  let isInitialized = false;
+
+  return [
+    (config: unknown): void => {
+      if (isInitialized) {
+        return;
+      }
+
+      // Validate config structure
+      if (!isValidMiloConfig(config)) {
+        throw new Error('MiloConfig validation failed: Invalid structure');
+      }
+
+      miloConfig = config;
+      isInitialized = true;
+    },
+    (): MiloConfig => {
+      if (!miloConfig) {
+        throw new Error('MiloConfig not initialized. Call setMiloConfig() first.');
+      }
+      return miloConfig;
+    },
+  ];
+})();

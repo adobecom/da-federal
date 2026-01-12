@@ -5,9 +5,9 @@ import { IrrecoverableError, RecoverableError } from "./Error/Error";
 import { GlobalNavigationData, parseNavigation } from "./Parse/Parse";
 import { initClickListeners } from "./PostRendering/ClickListeners";
 import { initKeyboardNav } from "./PostRendering/Keyboard";
-import { UnavConfig } from "./PostRendering/Unav";
+import { loadUnav } from "./PostRendering/Unav/Unav";
 import { getInitialHTML } from "./PreRendering/FetchAssets";
-import { renderListItems } from "./Utils/Utils";
+import { renderListItems, setMiloConfig, MiloConfig } from "./Utils/Utils";
 import './styles/styles.css';
 import { tabs } from "./Components/Tab/Render";
 
@@ -28,6 +28,7 @@ export type Input = {
   isLocalNav: boolean;
   mountpoint: HTMLElement;
   unavEnabled: boolean;
+  miloConfig?: MiloConfig;
 
   getStageDomainMap: (domainmap: unknown[], env: string) =>
     { [key: string]: string }
@@ -40,23 +41,32 @@ export type Input = {
 export const main = async (
   input: Input
 ): Promise<GlobalNavigation | IrrecoverableError> => {
-  if (!(input.gnavSource instanceof URL)) {
+  const { gnavSource, mountpoint, unavEnabled, miloConfig } = input;
+  console.log(miloConfig);
+  if (!(gnavSource instanceof URL)) {
     throw new IrrecoverableError("gnavSource needs to be a URL object");
   }
-  const initial = await getInitialHTML(input)
+  const initial = await getInitialHTML(input);
   if (initial instanceof IrrecoverableError)
     throw initial;
   const { mainNav, aside: _aside } = initial;
   if (mainNav instanceof IrrecoverableError)
     throw mainNav;
 
-  const gnavData = parseNavigation(mainNav);
+  // Initialize MiloConfig with validation
+  try {
+    setMiloConfig(miloConfig);
+  } catch (error) {
+    throw new IrrecoverableError(`Failed to initialize MiloConfig: ${error}`);
+  }
+
+  const gnavData = parseNavigation(mainNav, unavEnabled);
   if (gnavData instanceof IrrecoverableError)
     throw gnavData;
   
   // TODO: Implement Aside
   
-  await renderGnav(gnavData)(input.mountpoint);
+  await renderGnav(gnavData)(mountpoint);
 
   return postRenderingTasks(input);
 };
@@ -102,6 +112,7 @@ mountpoint: HTMLElement
 export const renderGnavString = ({
   components,
   productCTA,
+  unavEnabled,
 }: GlobalNavigationData
 ): string => `
 <nav>
@@ -109,21 +120,20 @@ export const renderGnavString = ({
     ${renderListItems(components, component)}
   </ul>
   ${productCTA === null ? '' : productEntryCTA(productCTA)}
-  <div class="feds-utilities">
-  </div>
+  ${unavEnabled ? '<div class="feds-utilities"></div>' : ''}
 </nav>
 `;
 
 
-export const postRenderingTasks = (
+export const postRenderingTasks = async (
   input: Input,
-): GlobalNavigation | IrrecoverableError => {
+): Promise<GlobalNavigation | IrrecoverableError> => {
   const errors = new Set<RecoverableError>();
-  const unav = loadUnav(input.mountpoint);
+  const unav = await loadUnav(input.mountpoint);
   if (unav instanceof RecoverableError)
     errors.add(unav);
   else 
-    unav.errors.forEach(errors.add);
+    unav.errors.forEach((error: RecoverableError) => errors.add(error));
   initClickListeners(input.mountpoint);
   initKeyboardNav(input.mountpoint);
   
@@ -131,26 +141,16 @@ export const postRenderingTasks = (
     = unav instanceof RecoverableError
     ? (): void => {}
     : unav.reloadUnav;
+
   return {
     closeEverything,
     reloadUnav,
     errors,
     setGnavTopPosition: (_): void => {},
-    getGnavTopPosition: (): number => 0
+    getGnavTopPosition: (): number => 0,
   };
-};
-
-type Unav = {
-  reloadUnav: (_?: UnavConfig) => void;
-  errors: Set<RecoverableError>;
-};
-
-const loadUnav = (
-  _nav: HTMLElement,
-  _config?: UnavConfig
-): Unav | RecoverableError => {
-  return new RecoverableError("loadUnav has not been implemented yet");
 };
 
 const closeEverything = (): void => {
 };
+

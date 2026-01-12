@@ -10,10 +10,12 @@ export type GlobalNavigationData = {
   productCTA: ProductEntryCTA | null;
   localnav: boolean;
   errors: List<RecoverableError>;
+  unavEnabled: boolean;
 };
 
 export const parseNavigation = (
-  mainNav: HTMLElement
+  mainNav: HTMLElement,
+  unavEnabled: boolean
 ): GlobalNavigationData | IrrecoverableError => {
   const [breadcrumbs, breadcrumbErrors]
     = parseListAndAccumulateErrors(
@@ -51,5 +53,6 @@ export const parseNavigation = (
     productCTA,
     localnav,
     errors,
+    unavEnabled,
   }
 };
