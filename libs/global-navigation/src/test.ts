@@ -22,7 +22,7 @@ const input = {
   if (mainNav instanceof IrrecoverableError)
     throw mainNav;
 
-  const gnavData = parseNavigation(mainNav);
+  const gnavData = parseNavigation(mainNav, input.unavEnabled);
   if (gnavData instanceof IrrecoverableError)
     throw gnavData;
   
