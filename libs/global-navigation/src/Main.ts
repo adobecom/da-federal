@@ -116,7 +116,43 @@ export const renderGnavString = ({
 ): string => `
 <nav>
   <ul>
-    ${renderListItems(components, component)}
+    ${((): string => {
+      const brandComponent = components.find((c) =>
+        c.type === "Brand"
+      ) ?? null;
+      const menuComponents = components.filter((c) => c.type !== "Brand");
+      const toggleButton = `
+        <button
+          class="feds-nav-toggle"
+          type="button"
+          aria-label="Navigation menu"
+          aria-expanded="false"
+          aria-controls="feds-menu-wrapper"
+          popovertarget="feds-menu-wrapper"
+        >
+        </button>
+      `.trim();
+
+      const brandHTML = brandComponent ? component(brandComponent) : "";
+      const menuItemsHTML = renderListItems(menuComponents, component);
+
+      return `
+        <li class="feds-brand-wrapper">
+          ${toggleButton}
+          ${brandHTML}
+        </li>
+        <li
+          id="feds-menu-wrapper"
+          popover
+          class="feds-menu-wrapper"
+          aria-hidden="true"
+        >
+          <ul class="feds-gnav-items">
+            ${menuItemsHTML}
+          </ul>
+        </li>
+      `.trim();
+    })()}
   </ul>
   ${productCTA === null ? '' : productEntryCTA(productCTA)}
   ${unavEnabled ? '<div class="feds-utilities"></div>' : ''}

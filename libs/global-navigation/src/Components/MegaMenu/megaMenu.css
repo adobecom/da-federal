@@ -6,10 +6,9 @@
   margin-left: 8px;
   border-right: 2px solid currentColor;
   border-bottom: 2px solid currentColor;
-  transform: rotate(45deg) translateY(-1px);
-  transform-origin: center;
-  transition: transform 150ms ease;
-  pointer-events: none;
+  transform: rotate(-45deg);
+  right: 20px;
+  top: calc(50% - 4px);
 }
 
 .mega-menu:has(+ .feds-popup:popover-open)::after {
@@ -43,3 +42,13 @@
     transform: translate3d(0, 0, 0);
     top: var(--feds-nav-height);
 }
+
+@media (min-width: 900px) {
+  .mega-menu::after {
+    transform: rotate(45deg) translateY(-1px);
+    transform-origin: center;
+    transition: transform 150ms ease;
+    pointer-events: none;
+  }
+}
+
